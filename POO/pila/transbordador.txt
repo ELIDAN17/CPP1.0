@@ -1,0 +1,21 @@
+4
+20 4
+380 izquierda
+720 izquierda
+1340 derecha
+1040 izquierda
+15 4
+380 izquierda
+720 izquierda
+1340 derecha
+1040 izquierda
+15 4
+380 izquierda
+720 izquierda
+1340 izquierda
+1040 izquierda
+15 4
+380 derecha
+720 derecha
+1340 derecha
+1040 derecha

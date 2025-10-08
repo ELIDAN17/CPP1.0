@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1725902434 source:d:\2024-poo2_mnn\pila\main.cpp
+	<iostream>
+	"Nodo.h"
+	"Pila.h"
+
+1725897423 d:\2024-poo2_mnn\pila\nodo.h
+
+1725902474 d:\2024-poo2_mnn\pila\pila.h
+
