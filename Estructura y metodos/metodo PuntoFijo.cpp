@@ -1,19 +1,12 @@
 #include <iostream>
-
 using namespace std;
-
-// --- Funciones Matemáticas Auxiliares (sin librerías) ---
-
-// Método de Herón para la raíz cuadrada
 double raizCuadrada(double n)
 {
     if (n < 0)
-        return 1.0 / 0.0; // Devolver infinito si es raíz de negativo (divergencia)
+        return 1.0 / 0.0;
     if (n == 0)
         return 0.0;
-    double x = n;
-    double y = 1.0;
-    double epsilon_local = 0.00000001;
+    double x = n, y = 1.0, epsilon_local = 0.00000001;
     while (x - y > epsilon_local)
     {
         x = (x + y) / 2;
@@ -21,8 +14,6 @@ double raizCuadrada(double n)
     }
     return x;
 }
-
-// Función potencia
 double potencia(double base, int exponente)
 {
     if (exponente == 0)
@@ -36,18 +27,10 @@ double potencia(double base, int exponente)
     }
     return resultado;
 }
-
-// Función para el valor absoluto
 double valorAbsoluto(double val)
 {
-    if (val < 0)
-    {
-        return -val;
-    }
-    return val;
+    return (val < 0) ? -val : val;
 }
-
-// Función raíz n-ésima (basada en Newton-Raphson)
 double raizN(double n, int indice)
 {
     if (n < 0 && indice % 2 == 0)
@@ -55,115 +38,122 @@ double raizN(double n, int indice)
     if (n == 0)
         return 0.0;
     double x = n;
-    double epsilon_local = 0.00000001;
     for (int i = 0; i < 100; ++i)
     {
         double x_anterior = x;
         x = (1.0 / indice) * ((indice - 1) * x + n / potencia(x, indice - 1));
-        if (valorAbsoluto(x - x_anterior) < epsilon_local)
+        if (valorAbsoluto(x - x_anterior) < 0.00000001)
             break;
     }
     return x;
 }
 
-// --- Functor para representar la función de iteración (Despeje) ---
+// Functor para representar la función de iteración (Despeje)
 struct FuncionPhi
 {
-    double a, b, c;
-    int n, opcion_phi;
-
+    double a4, a3, a2, a1, a0;
+    int grado_n;
+    int opcion_phi;
+    // F(x) = a4*x^4 + a3*x^3 + a2*x^2 + a1*x + a0
+    double calcularFx(double x)
+    {
+        double resultado = 0.0;
+        resultado += a0;
+        if (grado_n >= 1)
+            resultado += a1 * x;
+        if (grado_n >= 2)
+            resultado += a2 * x * x;
+        if (grado_n >= 3)
+            resultado += a3 * x * x * x;
+        if (grado_n >= 4)
+            resultado += a4 * x * x * x * x;
+        return resultado;
+    }
     double operator()(double x)
     {
-        // Si el usuario eligió una opción de la lista específica (1-4)
+        // Despejes ESPECÍFICOS (x^2 + x - 6 = 0)
         if (opcion_phi >= 1 && opcion_phi <= 4)
         {
             switch (opcion_phi)
             {
-            case 1: // phi1(x) = 6 - x^2
+            case 1:
                 return 6.0 - x * x;
-            case 2: // phi2(x) = sqrt(6 - x) (Solo se usa la raíz positiva para este ejemplo)
+            case 2:
                 return raizCuadrada(6.0 - x);
-            case 3: // phi3(x) = 6/x - 1
+            case 3:
                 if (x == 0)
                     return 1.0 / 0.0;
-                return 6.0 / x - 1.0;
-            case 4: // phi4(x) = 6 / (x + 1)
+                return (6.0 / x) - 1.0;
+            case 4:
                 if (x + 1.0 == 0)
                     return 1.0 / 0.0;
                 return 6.0 / (x + 1.0);
             }
         }
-        // Si el usuario eligió una opción genérica (Opción 5, 6, 7 en el nuevo menú)
-        else
+        // Despejes GENÉRICOS
+        else if (opcion_phi >= 5 && opcion_phi <= 6)
         {
             switch (opcion_phi)
             {
-                // Se dejan los despejes genéricos por si se usan para otro polinomio
-            case 5: // Corresponde al Despeje Genérico 1: x = (-a*x^n - c) / b
-                if (b == 0)
+            // Caso 5: Despejar el término lineal (a1*x) -> x = x - f(x)/a1 (Si a1 es el más grande)
+            case 5:
+                if (a1 == 0)
                     return 1.0 / 0.0;
-                return (-a * potencia(x, n) - c) / b;
-            case 6: // Corresponde al Despeje Genérico 2: x = Raiz n-ésima [(-b*x - c) / a]
-                if (a == 0)
+                return x - (calcularFx(x) / a1);
+
+            // Caso 6: Despejar la constante (a0/...) - x = -a0 / (a4*x^3 + a3*x^2 + a2*x + a1)
+            case 6:
+            {
+                double denominador = 0.0;
+                if (grado_n >= 4)
+                    denominador += a4 * potencia(x, 3);
+                if (grado_n >= 3)
+                    denominador += a3 * potencia(x, 2);
+                if (grado_n >= 2)
+                    denominador += a2 * x;
+                denominador += a1;
+
+                if (denominador == 0)
                     return 1.0 / 0.0;
-                return raizN((-b * x - c) / a, n);
-            case 7: // Corresponde al Despeje Genérico 3: x = -c / (a*x^(n-1) + b)
-                if ((a * potencia(x, n - 1) + b) == 0)
-                    return 1.0 / 0.0;
-                return -c / (a * potencia(x, n - 1) + b);
-            default:
-                return 1.0 / 0.0;
+                return -a0 / denominador;
+            }
             }
         }
-        return 1.0 / 0.0;
-    }
-
-    // Función original f(x) para la verificación de error |f(x_k)|
-    double calcularFx(double x)
-    {
-        return a * potencia(x, n) + b * x + c;
+        return 1.0 / 0.0; // Opción no válida
     }
 };
-
-// --- Verificación de Raíces Cuadráticas Exactas (Se mantiene) ---
-// NOTA: Esta función se mantiene, pero ahora se llama al final de metodoPuntoFijo
-// Usamos los coeficientes a, b, c de la estructura FuncionPhi para asegurar la coherencia
-void verificarRaicesCuadraticas(double a, double b, double c, double x_aprox)
+// --- Verificación de Raíces Cuadráticas Exactas ---
+void verificarRaicesCuadraticas(double a2, double a1, double a0, double x_aprox)
 {
+    if (a2 == 0)
+        return;
     cout << "\n=============================================" << endl;
-    cout << "VERIFICACION DE RAICES EXACTAS (SOLO PARA N=2)" << endl;
+    cout << "VERIFICACION DE RAICES EXACTAS (SOLO PARA GRADO 2)" << endl;
 
-    double discriminante = b * b - 4 * a * c;
-
+    double discriminante = a1 * a1 - 4 * a2 * a0;
     if (discriminante >= 0)
     {
         double raiz_d = raizCuadrada(discriminante);
-        // Manejar el caso donde la raizCuadrada devuelve infinito (discriminante negativo)
         if (raiz_d == 1.0 / 0.0)
         {
             cout << "La ecuacion tiene raices complejas. No se realiza verificacion simple." << endl;
             return;
         }
-
-        double x1_exacta = (-b + raiz_d) / (2 * a);
-        double x2_exacta = (-b - raiz_d) / (2 * a);
-
-        cout << "La ecuacion cuadratica tiene las siguientes raices exactas:" << endl;
+        double x1_exacta = (-a1 + raiz_d) / (2 * a2);
+        double x2_exacta = (-a1 - raiz_d) / (2 * a2);
         cout << "Raiz 1 (x1) = " << x1_exacta << endl;
         cout << "Raiz 2 (x2) = " << x2_exacta << endl;
 
         double error1 = valorAbsoluto(x_aprox - x1_exacta);
         double error2 = valorAbsoluto(x_aprox - x2_exacta);
-
-        cout << "\nComparacion con el resultado del Punto Fijo (" << x_aprox << "):" << endl;
-
+        cout << "\nEl valor aproximado se acerca ";
         if (error1 < error2)
         {
-            cout << "El valor aproximado se acerca a la Raiz 1 (Error: " << error1 << ")" << endl;
+            cout << "a la Raiz 1 (Error: " << error1 << ")" << endl;
         }
         else
         {
-            cout << "El valor aproximado se acerca a la Raiz 2 (Error: " << error2 << ")" << endl;
+            cout << "a la Raiz 2 (Error: " << error2 << ")" << endl;
         }
     }
     else
@@ -172,45 +162,68 @@ void verificarRaicesCuadraticas(double a, double b, double c, double x_aprox)
     }
     cout << "=============================================" << endl;
 }
-
-// --- Implementación del Método de Punto Fijo (ARREGLADA) ---
-
 void metodoPuntoFijo()
 {
-    double x0, x1; // Usamos x0 y x1 según el algoritmo
+    double x0, x1;
     double epsilon1, epsilon2;
-    FuncionPhi phi;
-    int k = 0; // k comienza en 0
+    FuncionPhi phi = {0.0, 0.0, 0.0, 0.0, 0.0, 0, 0};
+    int k = 0;
 
-    cout << "--- Metodo del Punto Fijo Generalizado (a*x^n + b*x + c = 0) ---" << endl;
+    cout << "--- Metodo del Punto Fijo (Polinomios de Grado 2, 3 o 4) ---" << endl;
 
-    // 1. Entrada de la función polinómica
-    cout << "Ingrese el exponente n (ej: 2 para cuadratica): ";
-    cin >> phi.n;
-    cout << "Ingrese el coeficiente a: ";
-    cin >> phi.a;
-    cout << "Ingrese el coeficiente b: ";
-    cin >> phi.b;
-    cout << "Ingrese el coeficiente c: ";
-    cin >> phi.c;
-    cout << "Ecuacion: " << phi.a << "x^" << phi.n << " + " << phi.b << "x + " << phi.c << " = 0" << endl;
+    // 1. Entrada del Grado y Coeficientes
+    do
+    {
+        cout << "Ingrese el GRADO N del polinomio (solo 2, 3 o 4): ";
+        cin >> phi.grado_n;
+    } while (phi.grado_n < 2 || phi.grado_n > 4);
 
-    // 2. Seleccion de la función de iteración (Incluye los 4 despejes específicos)
+    if (phi.grado_n == 4)
+    {
+        cout << "Ingrese a4 (x^4): ";
+        cin >> phi.a4;
+    }
+    if (phi.grado_n >= 3)
+    {
+        cout << "Ingrese a3 (x^3): ";
+        cin >> phi.a3;
+    }
+    if (phi.grado_n >= 2)
+    {
+        cout << "Ingrese a2 (x^2): ";
+        cin >> phi.a2;
+    }
+    cout << "Ingrese a1 (x^1): ";
+    cin >> phi.a1;
+    cout << "Ingrese a0 (cte): ";
+    cin >> phi.a0;
+
+    // Impresión de la Ecuación (para verificación)
+    cout << "\nEcuacion F(x): ";
+    if (phi.a4 != 0)
+        cout << phi.a4 << "x^4 + ";
+    if (phi.a3 != 0)
+        cout << phi.a3 << "x^3 + ";
+    if (phi.a2 != 0)
+        cout << phi.a2 << "x^2 + ";
+    if (phi.a1 != 0)
+        cout << phi.a1 << "x + ";
+    cout << phi.a0 << " = 0" << endl;
+
+    // 2. Selección de phi(x)
     cout << "\nSeleccione el despeje phi(x) a usar:" << endl;
-    cout << "Despejes ESPECIFICOS (para la ecuacion x^2 + x - 6 = 0):" << endl;
-    cout << "1. phi1(x) = 6 - x^2" << endl;
-    cout << "2. phi2(x) = sqrt(6 - x)" << endl;
-    cout << "3. phi3(x) = 6/x - 1" << endl;
-    cout << "4. phi4(x) = 6/(x + 1)" << endl;
-    cout << "---------------------------------------------------------" << endl;
-    cout << "Despejes GENERICOS (solo si su ecuacion coincide):" << endl;
-    cout << "5. (-a*x^n - c) / b" << endl;
-    cout << "6. Raiz n-esima [(-b*x - c) / a]" << endl;
-    cout << "7. -c / (a*x^(n-1) + b)" << endl;
+    cout << "Despejes ESPECIFICOS (Solo para F(x) = x^2 + x - 6 = 0)" << endl;
+    cout << "1. x = 6 - x^2" << endl;
+    cout << "2. x = sqrt(6 - x)" << endl;
+    cout << "3. x = (6/x) - 1" << endl;
+    cout << "4. x = 6 / (x + 1)" << endl;
+    cout << "------------------------------------------------------------" << endl;
+    cout << "5. Despeje GENERICO 1 (x = x - F(x)/a1)" << endl;
+    cout << "6. Despeje GENERICO 2 (x = -a0 / (aN*x^(N-1) + ... + a1))" << endl;
     cout << "Opcion: ";
     cin >> phi.opcion_phi;
 
-    // 1. Entrada de la aproximacion inicial y error
+    // 3. Entrada de la aproximación inicial y error
     cout << "\nIngrese la aproximacion inicial (x0): ";
     cin >> x0;
     cout << "Ingrese la precision epsilon1 (|f(x)|): ";
@@ -218,71 +231,64 @@ void metodoPuntoFijo()
     cout << "Ingrese la precision epsilon2 (|x_k - x_{k-1}|): ";
     cin >> epsilon2;
 
-    // 2. Si |f(x0)| < epsilon1, haga x_bar = x0 Fin.
     if (valorAbsoluto(phi.calcularFx(x0)) < epsilon1)
     {
         cout << "\n--- Convergencia inmediata en x0. Raiz aproximada (x_bar): " << x0 << " ---" << endl;
-        if (phi.n == 2)
-            verificarRaicesCuadraticas(phi.a, phi.b, phi.c, x0);
+        if (phi.grado_n == 2)
+            verificarRaicesCuadraticas(phi.a2, phi.a1, phi.a0, x0);
         return;
     }
 
-    // 3. k = 1
+    // Paso 3. k = 1
     k = 1;
-
     cout << "\nIteraciones:" << endl;
-    cout << "k\t x_k\t\t |f(x_k)|\t |x_k - x_{k-1}|" << endl;
+    cout << "K\t X_k\t\t f(X_k)\t\t |Error Aproximacion|" << endl;
 
     // --- Bucle de Iteraciones ---
     while (true)
     {
-
-        // 4. x1 = phi(x0)
+        // Paso 4. x1 = phi(x0)
         x1 = phi(x0);
         double fx1 = phi.calcularFx(x1);
         double error_aproximacion = valorAbsoluto(x1 - x0);
 
-        // Manejo de divergencias...
+        // Manejo de divergencias
         if (x1 == 1.0 / 0.0 || x1 == -1.0 / 0.0)
         {
-            cout << "\n--- ERROR: El metodo diverge (division por cero, raiz negativa, o el despeje no converge) ---" << endl;
+            cout << "\n--- ERROR: El metodo diverge (posiblemente mala elección de phi) ---" << endl;
             return;
         }
 
         // SALIDA DE LAS ITERACIONES (Tabla)
-        cout << k << "\t " << x1 << "\t " << valorAbsoluto(fx1) << "\t " << error_aproximacion << endl;
-        // -----------------------------
+        cout << k << "\t " << x1 << "\t\t " << valorAbsoluto(fx1) << "\t\t " << error_aproximacion << endl;
 
-        // 5. Si |f(x1)| < epsilon1 o si |x1 - x0| < epsilon2 entonces haga x_bar = x1 Fin.
+        // Paso 5. Condición de Parada
         if (valorAbsoluto(fx1) < epsilon1 || error_aproximacion < epsilon2)
         {
             cout << "\n--- Convergencia alcanzada y verificada ---" << endl;
             cout << "Raiz aproximada (x_bar): " << x1 << endl;
             cout << "Numero de iteraciones: " << k << endl;
 
-            // Verificación explícita de la condición de parada
             if (valorAbsoluto(fx1) < epsilon1)
             {
-                cout << "Condicion cumplida: |f(x1)| = " << valorAbsoluto(fx1) << " < " << epsilon1 << " (Epsilon1)." << endl;
+                cout << "Condicion cumplida: |f(x1)| < Epsilon1." << endl;
             }
             if (error_aproximacion < epsilon2)
             {
-                cout << "Condicion cumplida: |x1 - x0| = " << error_aproximacion << " < " << epsilon2 << " (Epsilon2)." << endl;
+                cout << "Condicion cumplida: |x1 - x0| < Epsilon2." << endl;
             }
             break;
         }
 
-        // 6. x0 = x1
+        // Paso 6. x0 = x1
         x0 = x1;
-
-        // 7. k = k + 1, vuelva al paso 4
+        // Paso 7. k = k + 1, vuelva al paso 4
         k++;
     }
 
-    // Llama a la función de verificación de raíces exactas (al final, fuera del bucle)
-    if (phi.n == 2)
+    if (phi.grado_n == 2)
     {
-        verificarRaicesCuadraticas(phi.a, phi.b, phi.c, x1);
+        verificarRaicesCuadraticas(phi.a2, phi.a1, phi.a0, x1);
     }
 }
 

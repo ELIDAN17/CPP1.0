@@ -2,6 +2,8 @@
 
 using namespace std;
 
+// --- Funciones Matemáticas Auxiliares ---
+
 // Función para elevar un número a una potencia entera
 double potencia(double base, int exponente)
 {
@@ -9,6 +11,17 @@ double potencia(double base, int exponente)
         return 1.0;
     if (exponente < 0)
         return 1.0 / potencia(base, -exponente);
+
+    // Optimizamos para los grados 2, 3 y 4
+    if (exponente == 1)
+        return base;
+    if (exponente == 2)
+        return base * base;
+    if (exponente == 3)
+        return base * base * base;
+    if (exponente == 4)
+        return base * base * base * base;
+
     double resultado = 1.0;
     for (int i = 0; i < exponente; ++i)
     {
@@ -20,23 +33,32 @@ double potencia(double base, int exponente)
 // Función para el valor absoluto
 double valorAbsoluto(double val)
 {
-    if (val < 0)
-    {
-        return -val;
-    }
-    return val;
+    return (val < 0) ? -val : val;
 }
 
-// --- Estructura para la Función Polinómica ---
-struct FuncionGeneral
+// --- Estructura para la Función Polinómica (Generalizada hasta Grado 4) ---
+struct FuncionBiseccion
 {
-    double a, b, c;
-    int n;
+    // Coeficientes para la forma a4*x^4 + a3*x^3 + a2*x^2 + a1*x + a0
+    double a4, a3, a2, a1, a0;
+    int grado_n;
 
-    // Calcula la función f(x) = a*x^n + b*x + c
+    // Calcula la función F(x)
     double calcularFx(double x)
     {
-        return a * potencia(x, n) + b * x + c;
+        double resultado = 0.0;
+
+        resultado += a0; // i=0
+        if (grado_n >= 1)
+            resultado += a1 * x; // i=1
+        if (grado_n >= 2)
+            resultado += a2 * potencia(x, 2); // i=2
+        if (grado_n >= 3)
+            resultado += a3 * potencia(x, 3); // i=3
+        if (grado_n >= 4)
+            resultado += a4 * potencia(x, 4); // i=4
+
+        return resultado;
     }
 };
 
@@ -45,23 +67,52 @@ void metodoBiseccion()
 {
     double a, b, epsilon;
     double x_medio;
-    FuncionGeneral funcion;
+
+    FuncionBiseccion funcion = {0.0, 0.0, 0.0, 0.0, 0.0, 0};
     int k = 0;
 
-    cout << "--- Metodo de la Biseccion (para f(x) = a*x^n + b*x + c) ---" << endl;
+    cout << "--- Metodo de la Biseccion (Polinomios de Grado 2, 3 o 4) ---" << endl;
 
-    // 1. Entrada de la función polinómica
-    cout << "Ingrese el exponente n (ej: 3 para cubica): ";
-    cin >> funcion.n;
-    cout << "Ingrese el coeficiente a: ";
-    cin >> funcion.a;
-    cout << "Ingrese el coeficiente b: ";
-    cin >> funcion.b;
-    cout << "Ingrese el coeficiente c: ";
-    cin >> funcion.c;
-    cout << "Ecuacion: " << funcion.a << "x^" << funcion.n << " + " << funcion.b << "x + " << funcion.c << " = 0" << endl;
+    // 1. Entrada del Grado y Coeficientes
+    do
+    {
+        cout << "Ingrese el GRADO N del polinomio (solo 2, 3 o 4): ";
+        cin >> funcion.grado_n;
+    } while (funcion.grado_n < 2 || funcion.grado_n > 4);
 
-    // 1. Entrada del intervalo inicial y precisión
+    if (funcion.grado_n == 4)
+    {
+        cout << "Ingrese a4 (x^4): ";
+        cin >> funcion.a4;
+    }
+    if (funcion.grado_n >= 3)
+    {
+        cout << "Ingrese a3 (x^3): ";
+        cin >> funcion.a3;
+    }
+    if (funcion.grado_n >= 2)
+    {
+        cout << "Ingrese a2 (x^2): ";
+        cin >> funcion.a2;
+    }
+    cout << "Ingrese a1 (x^1): ";
+    cin >> funcion.a1;
+    cout << "Ingrese a0 (cte): ";
+    cin >> funcion.a0;
+
+    // Impresión de la Ecuación (para verificación)
+    cout << "\nEcuacion F(x): ";
+    if (funcion.a4 != 0)
+        cout << funcion.a4 << "x^4 + ";
+    if (funcion.a3 != 0)
+        cout << funcion.a3 << "x^3 + ";
+    if (funcion.a2 != 0)
+        cout << funcion.a2 << "x^2 + ";
+    if (funcion.a1 != 0)
+        cout << funcion.a1 << "x + ";
+    cout << funcion.a0 << " = 0" << endl;
+
+    // 2. Entrada del intervalo inicial y precisión
     cout << "\nIngrese el limite inferior del intervalo (a): ";
     cin >> a;
     cout << "Ingrese el limite superior del intervalo (b): ";
@@ -70,17 +121,18 @@ void metodoBiseccion()
     cin >> epsilon;
 
     double fa = funcion.calcularFx(a);
+    // No necesitamos calcular fb inicialmente, solo su signo.
     double fb = funcion.calcularFx(b);
 
     // Verificar condición inicial f(a)f(b) < 0
     if (fa * fb >= 0)
     {
         cout << "\n--- ERROR: La funcion debe tener signos opuestos en los limites del intervalo." << endl;
-        cout << "f(a) * f(b) >= 0. Por favor, ingrese otro intervalo. ---" << endl;
+        cout << "f(a)=" << fa << ", f(b)=" << fb << ". Por favor, ingrese otro intervalo. ---" << endl;
         return;
     }
 
-    // 2. Si (b - a) < epsilon, haga x_bar cualquier x en [a,b] Fin. (Verificación inicial)
+    // 3. Verificación inicial de precisión
     if ((b - a) < epsilon)
     {
         double x_aprox = (a + b) / 2.0;
@@ -89,18 +141,15 @@ void metodoBiseccion()
         return;
     }
 
-    // 3. k = 1
+    // 4. k = 1
     k = 1;
 
     cout << "\nIteraciones:" << endl;
     cout << "k\t a\t\t b\t\t x_medio\t |b - a|" << endl;
 
-    // Bucle de Iteraciones (Paso 9: Vuelva al paso 5)
+    // Bucle de Iteraciones
     while (true)
     {
-
-        // 4. M = f(a) (Guardamos f(a) en una variable auxiliar para el paso 6)
-        // Ya tenemos fa, no necesitamos una variable 'M' separada.
 
         // 5. x = (a + b) / 2
         x_medio = (a + b) / 2.0;
@@ -108,22 +157,20 @@ void metodoBiseccion()
 
         // SALIDA DE LA ITERACIÓN
         cout << k << "\t " << a << "\t " << b << "\t " << x_medio << "\t " << (b - a) << endl;
-        // -----------------------------
 
-        // 6. Si M * f(x) > 0, haga a = x vaya al paso 8. (Donde M es f(a) de la iteración anterior)
+        // 6. Si f(a) * f(x_medio) > 0, haga a = x_medio
         if (fa * fx_medio > 0)
         {
             a = x_medio;
             fa = fx_medio; // f(a) se actualiza
         }
-        // 7. b = x (Si M * f(x) <= 0)
+        // 7. Si f(a) * f(x_medio) <= 0, haga b = x_medio
         else
         {
             b = x_medio;
-            // No necesitamos actualizar fb, ya que f(b) no se usa en la verificación M*f(x)>0
         }
 
-        // 8. Si (b - a) < epsilon, haga x_bar cualquier x en [a, b] Fin.
+        // 8. Condición de Parada: |b - a| < epsilon
         if ((b - a) < epsilon)
         {
             double x_aprox = (a + b) / 2.0;

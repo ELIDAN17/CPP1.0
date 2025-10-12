@@ -2,6 +2,8 @@
 
 using namespace std;
 
+// --- Funciones Matemáticas Auxiliares ---
+
 // Función para elevar un número a una potencia entera
 double potencia(double base, int exponente)
 {
@@ -20,31 +22,56 @@ double potencia(double base, int exponente)
 // Función para el valor absoluto
 double valorAbsoluto(double val)
 {
-    if (val < 0)
-    {
-        return -val;
-    }
-    return val;
+    return (val < 0) ? -val : val;
 }
 
-// --- Estructura para la Función y su Derivada ---
-struct FuncionGeneral
+// --- Estructura para la Función y su Derivada (Hasta Grado 4) ---
+struct FuncionRaphson
 {
-    double a, b, c;
-    int n;
+    // Coeficientes para la forma a4*x^4 + a3*x^3 + a2*x^2 + a1*x + a0
+    double a4, a3, a2, a1, a0;
+    int grado_n;
 
-    // Calcula la función f(x) = a*x^n + b*x + c
+    // Calcula la función original F(x)
     double calcularFx(double x)
     {
-        return a * potencia(x, n) + b * x + c;
+        double resultado = 0.0;
+
+        resultado += a0; // i=0
+        if (grado_n >= 1)
+            resultado += a1 * x; // i=1
+        if (grado_n >= 2)
+            resultado += a2 * x * x; // i=2
+        if (grado_n >= 3)
+            resultado += a3 * x * x * x; // i=3
+        if (grado_n >= 4)
+            resultado += a4 * x * x * x * x; // i=4
+
+        return resultado;
     }
 
-    // Calcula la derivada f'(x) = a*n*x^(n-1) + b
-    double calcularDerivada(double x)
+    // Calcula la derivada F'(x) = 4a4*x^3 + 3a3*x^2 + 2a2*x + a1
+    double calcularFPrimaX(double x)
     {
-        // Si n=1, el exponente de x es 0 (potencia(x, 0)=1), la derivada es a*1 + b. Correcto.
-        // Si n=0, la derivada es 0 + b. Correcto (c*x^0 + b*x + c).
-        return a * n * potencia(x, n - 1) + b;
+        double resultado = 0.0;
+
+        // Derivada del término x^1
+        if (grado_n >= 1)
+            resultado += a1;
+
+        // Derivada del término x^2 -> 2*a2*x
+        if (grado_n >= 2)
+            resultado += 2.0 * a2 * x;
+
+        // Derivada del término x^3 -> 3*a3*x^2
+        if (grado_n >= 3)
+            resultado += 3.0 * a3 * x * x;
+
+        // Derivada del término x^4 -> 4*a4*x^3
+        if (grado_n >= 4)
+            resultado += 4.0 * a4 * potencia(x, 3);
+
+        return resultado;
     }
 };
 
@@ -52,23 +79,51 @@ struct FuncionGeneral
 void metodoNewtonRaphson()
 {
     double x0, epsilon;
-    FuncionGeneral funcion;
-    int k = 1;
+    FuncionRaphson funcion = {0.0, 0.0, 0.0, 0.0, 0.0, 0}; // Inicializar a cero
+    int k = 0;
     double x_anterior;
     double x_actual;
 
-    cout << "--- Metodo de Newton-Raphson (para f(x) = a*x^n + b*x + c) ---" << endl;
+    cout << "--- Metodo de Newton-Raphson (Polinomios de Grado 2, 3 o 4) ---" << endl;
 
-    // 1. Entrada de la función polinómica
-    cout << "Ingrese el exponente n (ej: 3 para cubica): ";
-    cin >> funcion.n;
-    cout << "Ingrese el coeficiente a: ";
-    cin >> funcion.a;
-    cout << "Ingrese el coeficiente b: ";
-    cin >> funcion.b;
-    cout << "Ingrese el coeficiente c: ";
-    cin >> funcion.c;
-    cout << "Ecuacion: " << funcion.a << "x^" << funcion.n << " + " << funcion.b << "x + " << funcion.c << " = 0" << endl;
+    // 1. Entrada del Grado y Coeficientes
+    do
+    {
+        cout << "Ingrese el GRADO N del polinomio (solo 2, 3 o 4): ";
+        cin >> funcion.grado_n;
+    } while (funcion.grado_n < 2 || funcion.grado_n > 4);
+
+    if (funcion.grado_n == 4)
+    {
+        cout << "Ingrese a4 (x^4): ";
+        cin >> funcion.a4;
+    }
+    if (funcion.grado_n >= 3)
+    {
+        cout << "Ingrese a3 (x^3): ";
+        cin >> funcion.a3;
+    }
+    if (funcion.grado_n >= 2)
+    {
+        cout << "Ingrese a2 (x^2): ";
+        cin >> funcion.a2;
+    }
+    cout << "Ingrese a1 (x^1): ";
+    cin >> funcion.a1;
+    cout << "Ingrese a0 (cte): ";
+    cin >> funcion.a0;
+
+    // Impresión de la Ecuación (para verificación)
+    cout << "\nEcuacion F(x): ";
+    if (funcion.a4 != 0)
+        cout << funcion.a4 << "x^4 + ";
+    if (funcion.a3 != 0)
+        cout << funcion.a3 << "x^3 + ";
+    if (funcion.a2 != 0)
+        cout << funcion.a2 << "x^2 + ";
+    if (funcion.a1 != 0)
+        cout << funcion.a1 << "x + ";
+    cout << funcion.a0 << " = 0" << endl;
 
     // 2. Entrada de la aproximación inicial y precisión
     cout << "\nIngrese la aproximacion inicial (x0): ";
@@ -77,17 +132,25 @@ void metodoNewtonRaphson()
     cin >> epsilon;
 
     x_anterior = x0;
+    k = 1;
+
+    // Primer chequeo: Si la derivada es cero en x0, salimos inmediatamente.
+    if (funcion.calcularFPrimaX(x0) == 0)
+    {
+        cout << "\n--- ERROR: La derivada f'(x) es cero en x0 = " << x0 << ". El metodo fallara. ---" << endl;
+        return;
+    }
 
     cout << "\nIteraciones:" << endl;
-    cout << "k\t x_k\t\t f(x_k)\t\t f'(x_k)\t |x_k - x_{k-1}|" << endl;
+    cout << "k\t X_k\t\t f(X_k)\t\t f'(X_k)\t\t |Error Aproximado|" << endl;
 
     // Bucle de Iteraciones
     while (true)
     {
         double fx = funcion.calcularFx(x_anterior);
-        double f_prima_x = funcion.calcularDerivada(x_anterior);
+        double f_prima_x = funcion.calcularFPrimaX(x_anterior);
 
-        // Manejo de la derivada nula (posible punto de inflexión)
+        // Chequeo de la derivada nula dentro del bucle
         if (f_prima_x == 0)
         {
             cout << "\n--- ERROR: La derivada f'(x) es cero en x = " << x_anterior << ". El metodo fallara. ---" << endl;
@@ -96,16 +159,10 @@ void metodoNewtonRaphson()
 
         // Formula de Newton-Raphson: x_{k+1} = x_k - f(x_k) / f'(x_k)
         x_actual = x_anterior - (fx / f_prima_x);
-
         double error_aproximacion = valorAbsoluto(x_actual - x_anterior);
 
         // SALIDA DE LAS ITERACIONES (Tabla)
-        cout << k << "\t " << x_actual << "\t " << fx << "\t " << f_prima_x << "\t ";
-        if (k > 0)
-        {
-            cout << error_aproximacion;
-        }
-        cout << endl;
+        cout << k << "\t " << x_actual << "\t\t " << fx << "\t\t " << f_prima_x << "\t\t " << error_aproximacion << endl;
         // -----------------------------
 
         // Condición de Parada: |x_k - x_{k-1}| < epsilon

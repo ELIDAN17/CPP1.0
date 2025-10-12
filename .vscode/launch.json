@@ -2,6 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug C++",
+      "program": "${workspaceFolder}/bin/main",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+    },
+    {
       "name": "Debug Windows",
       "type": "cppdbg",
       "request": "launch",
