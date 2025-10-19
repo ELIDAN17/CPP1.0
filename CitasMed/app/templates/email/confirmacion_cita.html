@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .button {
+            background-color: #007bff;
+            color: white !important;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body style="font-family: sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="20" style="background-color: #ffffff; border-radius: 8px;">
+                    <tr>
+                        <td align="center" style="border-bottom: 1px solid #dddddd;">
+                            <h1 style="color: #333333;">Confirmación de Cita</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 0;">
+                            <p style="color: #555555; font-size: 16px;">Hola {{ paciente.username }},</p>
+                            <p style="color: #555555; font-size: 16px;">Tu cita ha sido confirmada con éxito. Aquí tienes los detalles:</p>
+                            <table width="100%" border="0" cellspacing="0" cellpadding="10" style="background-color: #f9f9f9; border: 1px solid #dddddd; margin-top: 20px;">
+                                <tr>
+                                    <td width="120" style="color: #333333;"><b>Médico:</b></td>
+                                    <td style="color: #555555;">Dr. {{ medico.usuario.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #333333;"><b>Fecha y Hora:</b></td>
+                                    <td style="color: #555555;">{{ cita.fecha_hora.strftime('%d de %B de %Y a las %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #333333;"><b>Motivo:</b></td>
+                                    <td style="color: #555555;">{{ cita.motivo_consulta }}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding: 20px 0; border-top: 1px solid #dddddd;">
+                            <p style="color: #888888; font-size: 12px;">Gracias por usar CitasMédicas.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

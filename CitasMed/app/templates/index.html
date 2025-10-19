@@ -1,51 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Bienvenido al Sistema de Citas</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; max-width: 800px; margin: auto; padding-top: 50px; }
-        h1 { color: #333; }
-        p { color: #666; font-size: 1.2em; }
-        .nav-links a {
-            display: inline-block;
-            margin: 10px;
-            padding: 12px 25px;
-            font-size: 1.1em;
-            text-decoration: none;
-            color: white;
-            background-color: #007bff;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        .nav-links a:hover { background-color: #0056b3; }
-        .welcome-msg { margin-bottom: 30px; }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Sistema de Agendamiento de Citas Médicas</h1>
-
-    <div class="welcome-msg">
-        {# Usamos la variable especial 'current_user' de Flask-Login #}
-        {% if current_user.is_authenticated %}
-            <p>Hola de nuevo, <strong>{{ current_user.username }}</strong>. ¿Qué te gustaría hacer?</p>
-        {% else %}
-            <p>Bienvenido. Por favor, inicia sesión o regístrate para continuar.</p>
-        {% endif %}
+{% block content %}
+<div class="container text-center py-5">
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Sistema de Citas Médicas</h1>
+            
+            {% if current_user.is_authenticated %}
+                <p class="fs-4 col-md-8 mx-auto">
+                    Hola de nuevo, <strong>{{ current_user.username }}</strong>. ¿Qué te gustaría hacer?
+                </p>
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.dashboard') }}">Ir a mi Dashboard</a>
+                <a class="btn btn-secondary btn-lg" href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
+            {% else %}
+                <p class="fs-4 col-md-8 mx-auto">
+                    Bienvenido. La forma más fácil de gestionar y agendar tus citas médicas.
+                </p>
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.login') }}">Iniciar Sesión</a>
+                <a class="btn btn-secondary btn-lg" href="{{ url_for('main.registro') }}">Registrarse</a>
+            {% endif %}
+        </div>
     </div>
-
-    <div class="nav-links">
-        {% if current_user.is_authenticated %}
-            {# --- ENLACES PARA USUARIOS LOGUEADOS --- #}
-            <a href="{{ url_for('main.dashboard') }}">Ir a mi Dashboard</a>
-            <a href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
-        {% else %}
-            {# --- ENLACES PARA VISITANTES --- #}
-            <a href="{{ url_for('main.login') }}">Iniciar Sesión</a>
-            <a href="{{ url_for('main.registro') }}">Registrarse</a>
-        {% endif %}
-    </div>
-
-</body>
-</html>
+</div>
+{% endblock %}

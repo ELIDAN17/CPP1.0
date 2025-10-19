@@ -1,40 +1,44 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Perfil del Dr. {{ medico.usuario.username }}</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
-        .nav { margin-bottom: 20px; }
-        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
-        .perfil { margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
-        .horarios-container { display: flex; flex-wrap: wrap; gap: 10px; }
-        .slot { background-color: #007bff; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; text-align: center; }
-        .slot:hover { background-color: #0056b3; }
-    </style>
-</head>
-<body>
-    <div class="nav">
-        <span>Hola, <strong>{{ current_user.username }}</strong></span>
-        <a href="{{ url_for('main.listar_medicos') }}">Volver a la Lista</a>
-        <a href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    {% if medico.foto_perfil %}
+                        <img src="{{ medico.foto_perfil }}" alt="Foto del Dr. {{ medico.usuario.username }}" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/150" alt="Foto no disponible" class="img-fluid rounded-circle">
+                    {% endif %}
+                </div>
+                <div class="col-md-9">
+                    <h1 class="card-title">Dr. {{ medico.usuario.username }}</h1>
+                    <h5 class="card-subtitle mb-2 text-muted">{{ medico.especialidad }}</h5>
+                    {% if medico.biografia %}
+                        <p class="card-text"><em>{{ medico.biografia }}</em></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="perfil">
-        <h1>Dr. {{ medico.usuario.username }}</h1>
-        <p><strong>Especialidad:</strong> {{ medico.especialidad }}</p>
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h3>Horarios Disponibles</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap">
+                {% for slot in horarios_libres %}
+                    <a href="{{ url_for('main.agendar', medico_id=medico.id, slot=slot.isoformat()) }}" class="btn btn-primary m-1">
+                        {{ slot.strftime('%d/%m') }} <br>
+                        {{ slot.strftime('%H:%M') }}
+                    </a>
+                {% else %}
+                    <div class="alert alert-info w-100" role="alert">
+                        Este médico no tiene horarios disponibles en los próximos 14 días.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-
-    <h2>Horarios Disponibles</h2>
-    <div class="horarios-container">
-        {% for slot in horarios_libres %}
-            <a href="{{ url_for('main.agendar', medico_id=medico.id, slot=slot.isoformat()) }}" class="slot">
-            {{ slot.strftime('%d/%m/%Y') }} <br>
-            {{ slot.strftime('%H:%M') }}
-        </a>
-        {% else %}
-            <p>Este médico no tiene horarios disponibles en los próximos 14 días.</p>
-        {% endfor %}
-    </div>
-</body>
-</html>
+{% endblock %}

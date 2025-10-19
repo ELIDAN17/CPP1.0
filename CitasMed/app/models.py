@@ -4,6 +4,8 @@ from . import db  # La instancia de la BD creada en __init__.py
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from . import login_manager
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from flask import current_app
 
 class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -25,6 +27,20 @@ class Usuario(db.Model, UserMixin):
     )
     estado_verificacion = db.Column(db.String(10), nullable=False, default='aprobado')
     
+    # --- NUEVOS MÉTODOS PARA EL TOKEN ---
+    def get_reset_token(self, expires_sec=1800):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id})
+
+    @staticmethod
+    def verify_reset_token(token, expires_sec=1800):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, max_age=expires_sec)['user_id']
+        except:
+            return None
+        return Usuario.query.get(user_id)
+    
     # Nuevo método para establecer la contraseña
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -34,6 +50,8 @@ class Usuario(db.Model, UserMixin):
         return check_password_hash(self.password_hash, password)
     def __repr__(self):
         return f'<Usuario {self.username}>'
+    
+    
 
 class Medico(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -42,6 +60,8 @@ class Medico(db.Model):
     
     # Relación con Usuario
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    biografia = db.Column(db.Text, nullable=True)
+    foto_perfil = db.Column(db.String(200), nullable=True)
     usuario = db.relationship('Usuario', backref=db.backref('medico', uselist=False))
 
     def __repr__(self):

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h2>Editar mi Perfil Profesional</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="biografia" class="form-label">Biografía:</label>
+                        <textarea name="biografia" id="biografia" rows="5" class="form-control" placeholder="Escribe una breve descripción sobre tu experiencia y enfoque médico...">{{ medico.biografia or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="foto_perfil" class="form-label">URL de la Foto de Perfil:</label>
+                        <input type="url" name="foto_perfil" id="foto_perfil" class="form-control" value="{{ medico.foto_perfil or '' }}" placeholder="https://ejemplo.com/tu-foto.jpg">
+                        <div class="form-text">
+                            Pega aquí el enlace a una imagen tuya que esté alojada en internet.
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

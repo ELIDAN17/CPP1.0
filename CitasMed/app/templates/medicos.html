@@ -1,36 +1,39 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Encuentra a tu Médico</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
-        h1 { border-bottom: 2px solid #ccc; padding-bottom: 10px; }
-        .medico-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
-        .medico-card h2 { margin-top: 0; }
-        .medico-card a { text-decoration: none; background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px; }
-        .nav { margin-bottom: 20px; }
-        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
-    </style>
-</head>
-<body>
-    <div class="nav">
-        <span>Hola, <strong>{{ current_user.username }}</strong></span>
-        <a href="{{ url_for('main.dashboard') }}">Mi Dashboard</a>
-        <a href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Médicos Disponibles</h1>
+
+    <div class="row row-cols-1 row-cols-md-2 g-4">
+        {% for medico in medicos %}
+        <div class="col">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            {% if medico.foto_perfil %}
+                                <img src="{{ medico.foto_perfil }}" alt="Foto del Dr. {{ medico.usuario.username }}" class="rounded-circle me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://via.placeholder.com/80" alt="Foto no disponible" class="rounded-circle me-3">
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h4 class="card-title mb-1">Dr. {{ medico.usuario.username }}</h4>
+                            <p class="card-text text-muted">{{ medico.especialidad }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-end">
+                    <a href="{{ url_for('main.perfil_medico', medico_id=medico.id) }}" class="btn btn-primary">Ver Horarios</a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No hay médicos disponibles en este momento.
+            </div>
+        </div>
+        {% endfor %}
     </div>
 
-    <h1>Médicos Disponibles</h1>
-
-    {% for medico in medicos %}
-    <div class="medico-card">
-        <h2>Dr. {{ medico.usuario.username }}</h2>
-        <p><strong>Especialidad:</strong> {{ medico.especialidad }}</p>
-        <a href="{{ url_for('main.perfil_medico', medico_id=medico.id) }}">Ver Horarios Disponibles</a>
-    </div>
-    {% else %}
-    <p>No hay médicos disponibles en este momento.</p>
-    {% endfor %}
-
-</body>
-</html>
+{% endblock %}
