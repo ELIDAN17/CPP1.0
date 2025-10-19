@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Encuentra a tu Médico</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+        h1 { border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        .medico-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .medico-card h2 { margin-top: 0; }
+        .medico-card a { text-decoration: none; background-color: #007bff; color: white; padding: 8px 12px; border-radius: 4px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <span>Hola, <strong>{{ current_user.username }}</strong></span>
+        <a href="{{ url_for('main.dashboard') }}">Mi Dashboard</a>
+        <a href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
+    </div>
+
+    <h1>Médicos Disponibles</h1>
+
+    {% for medico in medicos %}
+    <div class="medico-card">
+        <h2>Dr. {{ medico.usuario.username }}</h2>
+        <p><strong>Especialidad:</strong> {{ medico.especialidad }}</p>
+        <a href="{{ url_for('main.perfil_medico', medico_id=medico.id) }}">Ver Horarios Disponibles</a>
+    </div>
+    {% else %}
+    <p>No hay médicos disponibles en este momento.</p>
+    {% endfor %}
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Perfil del Dr. {{ medico.usuario.username }}</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+        .perfil { margin-bottom: 30px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+        .horarios-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .slot { background-color: #007bff; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; text-align: center; }
+        .slot:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <span>Hola, <strong>{{ current_user.username }}</strong></span>
+        <a href="{{ url_for('main.listar_medicos') }}">Volver a la Lista</a>
+        <a href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
+    </div>
+
+    <div class="perfil">
+        <h1>Dr. {{ medico.usuario.username }}</h1>
+        <p><strong>Especialidad:</strong> {{ medico.especialidad }}</p>
+    </div>
+
+    <h2>Horarios Disponibles</h2>
+    <div class="horarios-container">
+        {% for slot in horarios_libres %}
+            <a href="{{ url_for('main.agendar', medico_id=medico.id, slot=slot.isoformat()) }}" class="slot">
+            {{ slot.strftime('%d/%m/%Y') }} <br>
+            {{ slot.strftime('%H:%M') }}
+        </a>
+        {% else %}
+            <p>Este médico no tiene horarios disponibles en los próximos 14 días.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

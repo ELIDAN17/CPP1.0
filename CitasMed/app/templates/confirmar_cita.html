@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar Cita</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+        .confirmation-box { border: 1px solid #ccc; padding: 20px; border-radius: 5px; }
+        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; cursor: pointer; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <span>Hola, <strong>{{ current_user.username }}</strong></span>
+        <a href="{{ url_for('main.perfil_medico', medico_id=medico.id) }}">Volver</a>
+        <a href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
+    </div>
+
+    <div class="confirmation-box">
+        <h1>Confirmar tu Cita</h1>
+        <p>Estás a punto de agendar una cita con:</p>
+        <p><strong>Médico:</strong> Dr. {{ medico.usuario.username }}</p>
+        <p><strong>Especialidad:</strong> {{ medico.especialidad }}</p>
+        <p><strong>Fecha y Hora:</strong> {{ slot.strftime('%d de %B de %Y a las %H:%M') }}</p>
+
+        <form method="POST">
+            <button type="submit">Confirmar Cita</button>
+        </form>
+    </div>
+</body>
+</html>
