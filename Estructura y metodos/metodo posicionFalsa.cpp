@@ -1,6 +1,8 @@
+// Juan Mamani Pari
+// Metodo Posicion Falsa
+// Los epsilon son error de aproximacion (ejemplo: 0.0001)
 #include <iostream>
 using namespace std;
-
 // Función para elevar un número a una potencia entera
 double potencia(double base, int exponente)
 {
@@ -26,20 +28,18 @@ double potencia(double base, int exponente)
     }
     return resultado;
 }
-
 // Función para el valor absoluto
 double valorAbsoluto(double val)
 {
     return (val < 0) ? -val : val;
 }
 
-// --- Estructura para la Función Polinómica (Generalizada hasta Grado 4) ---
+// Estructura para la Función Polinómica
 struct FuncionPosicionFalsa
 {
     // Coeficientes para la forma a4*x^4 + a3*x^3 + a2*x^2 + a1*x + a0
     double a4, a3, a2, a1, a0;
     int grado_n;
-
     // Calcula la función F(x)
     double calcularFx(double x)
     {
@@ -59,7 +59,7 @@ struct FuncionPosicionFalsa
     }
 };
 
-// --- Implementación del Método de la Posición Falsa ---
+// Implementación del Método de la Posición Falsa
 void metodoPosicionFalsa()
 {
     double a, b, epsilon1, epsilon2;
@@ -98,7 +98,6 @@ void metodoPosicionFalsa()
     cin >> funcion.a1;
     cout << "Ingrese a0 (cte): ";
     cin >> funcion.a0;
-
     // Impresión de la Ecuación (para verificación)
     cout << "\nEcuacion F(x): ";
     if (funcion.a4 != 0)
@@ -116,17 +115,12 @@ void metodoPosicionFalsa()
     cin >> a;
     cout << "Ingrese el limite superior del intervalo (b): ";
     cin >> b;
-    // He intercambiado las etiquetas de epsilon1 y epsilon2 para que epsilon1
-    // corresponda a |f(x)| y epsilon2 a |b-a|, que es la notación más común
-    // y se ajusta mejor a cómo se comprueban en el bucle.
     cout << "Ingrese la precision epsilon1 (|f(x)|): ";
     cin >> epsilon1;
     cout << "Ingrese la precision epsilon2 (|b - a|): ";
     cin >> epsilon2;
-
     fa = funcion.calcularFx(a);
     fb = funcion.calcularFx(b);
-
     // Verificar condición inicial f(a)f(b) < 0
     if (fa * fb >= 0)
     {
@@ -134,8 +128,7 @@ void metodoPosicionFalsa()
         cout << "f(a)=" << fa << ", f(b)=" << fb << ". Por favor, ingrese otro intervalo. ---" << endl;
         return;
     }
-
-    // 3. Verificaciones iniciales (revisadas para usar las nuevas variables epsilon)
+    // 3. Verificaciones iniciales (para usar las nuevas variables epsilon)
     if ((b - a) < epsilon2)
     {
         double x_aprox = (a + b) / 2.0;
@@ -150,7 +143,6 @@ void metodoPosicionFalsa()
         cout << "Raiz aproximada (x_bar): " << x_aprox << endl;
         return;
     }
-
     // 4. k = 1
     k = 1;
 
@@ -160,9 +152,7 @@ void metodoPosicionFalsa()
     // Bucle de Iteraciones
     while (true)
     {
-
         double denominador = fb - fa;
-
         // Manejo del denominador (f(b) - f(a)) = 0
         if (denominador == 0)
         {
@@ -171,7 +161,7 @@ void metodoPosicionFalsa()
         }
 
         // 5. Formula de la Posición Falsa: x = (a*f(b) - b*f(a)) / (f(b) - f(a))
-        // Nota: Esta fórmula es equivalente a x_r = b - (f(b) * (b - a)) / (f(b) - f(a))
+        // Nota: Fórmula equivalente a x_r = b - (f(b) * (b - a)) / (f(b) - f(a))
         x_actual = (a * fb - b * fa) / denominador;
         fx_actual = funcion.calcularFx(x_actual);
 
@@ -214,7 +204,7 @@ void metodoPosicionFalsa()
             break;
         }
 
-        // 10. k = k + 1, vuelva al paso 5
+        // 10. k = k + 1
         k++;
     }
 }

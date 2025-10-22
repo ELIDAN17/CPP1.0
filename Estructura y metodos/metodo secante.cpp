@@ -1,10 +1,8 @@
+// Juan Mamani Pari
+// Metodo secante
+// Los epsilon son error de aproximacion (ejemplo: 0.0001)
 #include <iostream>
-
 using namespace std;
-
-// --- Funciones Matemáticas Auxiliares ---
-
-// Función para elevar un número a una potencia entera
 double potencia(double base, int exponente)
 {
     if (exponente == 0)
@@ -18,14 +16,12 @@ double potencia(double base, int exponente)
     }
     return resultado;
 }
-
-// Función para el valor absoluto
 double valorAbsoluto(double val)
 {
     return (val < 0) ? -val : val;
 }
 
-// --- Estructura para la Función Polinómica (Generalizada hasta Grado 4) ---
+// Estructura para la Función Polinómica
 struct FuncionSecante
 {
     // Coeficientes para la forma a4*x^4 + a3*x^3 + a2*x^2 + a1*x + a0
@@ -51,12 +47,11 @@ struct FuncionSecante
     }
 };
 
-// --- Implementación del Método de la Secante ---
+// Implementación del Método de la Secante
 void metodoSecante()
 {
     double x_anterior, x_actual, x_siguiente;
     double epsilon1, epsilon2;
-    // Inicialización generalizada
     FuncionSecante funcion = {0.0, 0.0, 0.0, 0.0, 0.0, 0};
     int k = 0;
     double fx_anterior, fx_actual;

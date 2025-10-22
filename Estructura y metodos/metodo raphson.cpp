@@ -1,10 +1,8 @@
+// Juan Mamani Pari
+// Metodo Newton-Raphson
+// Los epsilon son error de aproximacion (ejemplo: 0.0001)
 #include <iostream>
-
 using namespace std;
-
-// --- Funciones Matemáticas Auxiliares ---
-
-// Función para elevar un número a una potencia entera
 double potencia(double base, int exponente)
 {
     if (exponente == 0)
@@ -18,14 +16,12 @@ double potencia(double base, int exponente)
     }
     return resultado;
 }
-
-// Función para el valor absoluto
 double valorAbsoluto(double val)
 {
     return (val < 0) ? -val : val;
 }
 
-// --- Estructura para la Función y su Derivada (Hasta Grado 4) ---
+// Estructura para la Función y su Derivada
 struct FuncionRaphson
 {
     // Coeficientes para la forma a4*x^4 + a3*x^3 + a2*x^2 + a1*x + a0
@@ -75,11 +71,11 @@ struct FuncionRaphson
     }
 };
 
-// --- Implementación del Método de Newton-Raphson ---
+// Implementación del Método de Newton-Raphson
 void metodoNewtonRaphson()
 {
     double x0, epsilon;
-    FuncionRaphson funcion = {0.0, 0.0, 0.0, 0.0, 0.0, 0}; // Inicializar a cero
+    FuncionRaphson funcion = {0.0, 0.0, 0.0, 0.0, 0.0, 0};
     int k = 0;
     double x_anterior;
     double x_actual;
@@ -112,7 +108,6 @@ void metodoNewtonRaphson()
     cin >> funcion.a1;
     cout << "Ingrese a0 (cte): ";
     cin >> funcion.a0;
-
     // Impresión de la Ecuación (para verificación)
     cout << "\nEcuacion F(x): ";
     if (funcion.a4 != 0)
@@ -124,7 +119,6 @@ void metodoNewtonRaphson()
     if (funcion.a1 != 0)
         cout << funcion.a1 << "x + ";
     cout << funcion.a0 << " = 0" << endl;
-
     // 2. Entrada de la aproximación inicial y precisión
     cout << "\nIngrese la aproximacion inicial (x0): ";
     cin >> x0;
@@ -134,7 +128,7 @@ void metodoNewtonRaphson()
     x_anterior = x0;
     k = 1;
 
-    // Primer chequeo: Si la derivada es cero en x0, salimos inmediatamente.
+    // Verificacion: Si la derivada es cero en x0, termina.
     if (funcion.calcularFPrimaX(x0) == 0)
     {
         cout << "\n--- ERROR: La derivada f'(x) es cero en x0 = " << x0 << ". El metodo fallara. ---" << endl;
@@ -150,20 +144,18 @@ void metodoNewtonRaphson()
         double fx = funcion.calcularFx(x_anterior);
         double f_prima_x = funcion.calcularFPrimaX(x_anterior);
 
-        // Chequeo de la derivada nula dentro del bucle
+        // Verifica la derivada nula dentro del bucle
         if (f_prima_x == 0)
         {
             cout << "\n--- ERROR: La derivada f'(x) es cero en x = " << x_anterior << ". El metodo fallara. ---" << endl;
             return;
         }
-
         // Formula de Newton-Raphson: x_{k+1} = x_k - f(x_k) / f'(x_k)
         x_actual = x_anterior - (fx / f_prima_x);
         double error_aproximacion = valorAbsoluto(x_actual - x_anterior);
 
         // SALIDA DE LAS ITERACIONES (Tabla)
         cout << k << "\t " << x_actual << "\t\t " << fx << "\t\t " << f_prima_x << "\t\t " << error_aproximacion << endl;
-        // -----------------------------
 
         // Condición de Parada: |x_k - x_{k-1}| < epsilon
         if (error_aproximacion < epsilon)
@@ -189,7 +181,6 @@ int main()
         cout << "\n¿Deseas realizar otra operacion? (S/N): ";
         cin >> continuar_programa;
     } while (continuar_programa == 'S' || continuar_programa == 's');
-
     cout << "Programa terminado." << endl;
     return 0;
 }

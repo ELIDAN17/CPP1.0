@@ -1,3 +1,6 @@
+// Juan Mamani Pari
+// Metodo Punto Fijo
+// Los epsilon son error de aproximacion (ejemplo: 0.0001)
 #include <iostream>
 using namespace std;
 double raizCuadrada(double n)
@@ -48,7 +51,7 @@ double raizN(double n, int indice)
     return x;
 }
 
-// Functor para representar la función de iteración (Despeje)
+// Funcion para representar la función de iteración (Despeje)
 struct FuncionPhi
 {
     double a4, a3, a2, a1, a0;
@@ -77,8 +80,10 @@ struct FuncionPhi
             switch (opcion_phi)
             {
             case 1:
+                // return raizCuadrada(((-1.2 * x * x * x) - (2.1 * x) + 0.7) / -3.5);
                 return 6.0 - x * x;
             case 2:
+                // return raizCuadrada(((3.5 * x * x) - (2.1 * x) + 0.7) / (1.2 * x));
                 return raizCuadrada(6.0 - x);
             case 3:
                 if (x == 0)
@@ -112,24 +117,22 @@ struct FuncionPhi
                 if (grado_n >= 2)
                     denominador += a2 * x;
                 denominador += a1;
-
                 if (denominador == 0)
                     return 1.0 / 0.0;
                 return -a0 / denominador;
             }
             }
         }
-        return 1.0 / 0.0; // Opción no válida
+        return 1.0 / 0.0;
     }
 };
-// --- Verificación de Raíces Cuadráticas Exactas ---
+// Verificación de Raíces Cuadráticas Exactas
 void verificarRaicesCuadraticas(double a2, double a1, double a0, double x_aprox)
 {
     if (a2 == 0)
         return;
     cout << "\n=============================================" << endl;
     cout << "VERIFICACION DE RAICES EXACTAS (SOLO PARA GRADO 2)" << endl;
-
     double discriminante = a1 * a1 - 4 * a2 * a0;
     if (discriminante >= 0)
     {
@@ -143,7 +146,6 @@ void verificarRaicesCuadraticas(double a2, double a1, double a0, double x_aprox)
         double x2_exacta = (-a1 - raiz_d) / (2 * a2);
         cout << "Raiz 1 (x1) = " << x1_exacta << endl;
         cout << "Raiz 2 (x2) = " << x2_exacta << endl;
-
         double error1 = valorAbsoluto(x_aprox - x1_exacta);
         double error2 = valorAbsoluto(x_aprox - x2_exacta);
         cout << "\nEl valor aproximado se acerca ";
@@ -168,9 +170,7 @@ void metodoPuntoFijo()
     double epsilon1, epsilon2;
     FuncionPhi phi = {0.0, 0.0, 0.0, 0.0, 0.0, 0, 0};
     int k = 0;
-
     cout << "--- Metodo del Punto Fijo (Polinomios de Grado 2, 3 o 4) ---" << endl;
-
     // 1. Entrada del Grado y Coeficientes
     do
     {
@@ -197,7 +197,6 @@ void metodoPuntoFijo()
     cin >> phi.a1;
     cout << "Ingrese a0 (cte): ";
     cin >> phi.a0;
-
     // Impresión de la Ecuación (para verificación)
     cout << "\nEcuacion F(x): ";
     if (phi.a4 != 0)
@@ -210,7 +209,7 @@ void metodoPuntoFijo()
         cout << phi.a1 << "x + ";
     cout << phi.a0 << " = 0" << endl;
 
-    // 2. Selección de phi(x)
+    // 2. Selección de funciones extraidas del principal
     cout << "\nSeleccione el despeje phi(x) a usar:" << endl;
     cout << "Despejes ESPECIFICOS (Solo para F(x) = x^2 + x - 6 = 0)" << endl;
     cout << "1. x = 6 - x^2" << endl;
@@ -222,7 +221,6 @@ void metodoPuntoFijo()
     cout << "6. Despeje GENERICO 2 (x = -a0 / (aN*x^(N-1) + ... + a1))" << endl;
     cout << "Opcion: ";
     cin >> phi.opcion_phi;
-
     // 3. Entrada de la aproximación inicial y error
     cout << "\nIngrese la aproximacion inicial (x0): ";
     cin >> x0;
@@ -230,7 +228,6 @@ void metodoPuntoFijo()
     cin >> epsilon1;
     cout << "Ingrese la precision epsilon2 (|x_k - x_{k-1}|): ";
     cin >> epsilon2;
-
     if (valorAbsoluto(phi.calcularFx(x0)) < epsilon1)
     {
         cout << "\n--- Convergencia inmediata en x0. Raiz aproximada (x_bar): " << x0 << " ---" << endl;
@@ -238,13 +235,12 @@ void metodoPuntoFijo()
             verificarRaicesCuadraticas(phi.a2, phi.a1, phi.a0, x0);
         return;
     }
-
     // Paso 3. k = 1
     k = 1;
     cout << "\nIteraciones:" << endl;
     cout << "K\t X_k\t\t f(X_k)\t\t |Error Aproximacion|" << endl;
 
-    // --- Bucle de Iteraciones ---
+    // Bucle de Iteraciones
     while (true)
     {
         // Paso 4. x1 = phi(x0)
@@ -258,7 +254,6 @@ void metodoPuntoFijo()
             cout << "\n--- ERROR: El metodo diverge (posiblemente mala elección de phi) ---" << endl;
             return;
         }
-
         // SALIDA DE LAS ITERACIONES (Tabla)
         cout << k << "\t " << x1 << "\t\t " << valorAbsoluto(fx1) << "\t\t " << error_aproximacion << endl;
 
@@ -291,7 +286,6 @@ void metodoPuntoFijo()
         verificarRaicesCuadraticas(phi.a2, phi.a1, phi.a0, x1);
     }
 }
-
 int main()
 {
     char continuar_programa;
