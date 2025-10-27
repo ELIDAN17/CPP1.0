@@ -13,7 +13,7 @@
         {% endif %}
     {% endwith %}
 
-    <h1 class="mb-4">Mi Dashboard</h1>
+    <h1 class="mb-4">Hola, {{ current_user.username }}!</h1>
 
     {# --- VISTA PARA PACIENTES --- #}
     {% if current_user.rol == 'paciente' %}
@@ -25,8 +25,22 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item">
-                        <a href="{{ url_for('main.listar_medicos') }}">Buscar Médicos y Agendar Cita</a>
+                        <a href="{{ url_for('main.listar_medicos') }}" class="btn btn-sm btn-warning">🔍 Buscar Medicos y Agendar Cita</a>
                     </li>
+                    
+                    <!-- BOTÓN SOLICITAR MÉDICO CORREGIDO -->
+                    {% if current_user.estado_verificacion == 'aprobado' %}
+                    <li class="list-group-item">
+                        <a href="{{ url_for('main.solicitar_medico') }}" class="btn btn-warning btn-sm">
+                            🩺 Solicitar Ser Médico
+                        </a>
+                        <small class="text-muted d-block mt-1">¿Eres profesional de la salud?</small>
+                    </li>
+                    {% elif current_user.estado_verificacion == 'solicitando_verificacion' %}
+                    <li class="list-group-item">
+                        <span class="badge bg-info">Solicitud Médica en Revisión</span>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
@@ -52,6 +66,8 @@
                                 {% if cita.estado == 'programada' %}
                                     <a href="{{ url_for('main.cancelar_cita', cita_id=cita.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro?');">Cancelar</a>
                                 {% endif %}
+                                <!-- BOTÓN CHAT -->
+                                <a href="{{ url_for('main.chat_cita', cita_id=cita.id) }}" class="btn btn-sm btn-info">💬 Chat</a>
                             </td>
                         </tr>
                         {% else %}
@@ -75,10 +91,10 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item">
-                        <a href="{{ url_for('main.gestionar_horario') }}">Gestionar mi Horario Semanal</a>
+                        <a href="{{ url_for('main.gestionar_horario') }}" class="btn btn-warning btn-sm">📇 Gestionar mi Horario Semanal</a>
                     </li>
                     <li class="list-group-item">
-                        <a href="{{ url_for('main.editar_perfil_medico') }}">Editar mi Perfil Profesional</a>
+                        <a href="{{ url_for('main.editar_perfil') }}" class="btn btn-warning btn-sm">👤 Editar mi Perfil Profesional</a>
                     </li>
                 </ul>
             </div>
@@ -93,6 +109,7 @@
                             <th>Paciente</th>
                             <th>Motivo</th>
                             <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -102,10 +119,27 @@
                             <td>{{ cita.paciente.username }}</td>
                             <td>{{ cita.motivo_consulta }}</td>
                             <td><span class="badge bg-primary">{{ cita.estado.title() }}</span></td>
+                            <td>
+                                <!-- CHAT -->
+                                <a href="{{ url_for('main.chat_cita', cita_id=cita.id) }}" class="btn btn-sm btn-info" title="Chat">💬 Chat</a>
+                                
+                                <!-- HISTORIAL MÉDICO -->
+                                <a href="{{ url_for('main.gestionar_historial', cita_id=cita.id) }}" class="btn btn-sm btn-success" title="Historial">📋 Historial</a>
+                                
+                                <!-- COMPLETAR CITA -->
+                                {% if cita.estado == 'programada' %}
+                                    <button class="btn btn-sm btn-warning" onclick="completarCita({{ cita.id }})" title="Completar">✓ Completar</button>
+                                {% endif %}
+                                
+                                <!-- CONSULTA VIRTUAL -->
+                                {% if cita.canal_consulta == 'virtual' and cita.estado == 'programada' %}
+                                    <a href="{{ url_for('main.iniciar_consulta_virtual', cita_id=cita.id) }}" class="btn btn-sm btn-primary" title="Consulta Virtual">🎥</a>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="text-center">No tienes citas agendadas.</td>
+                            <td colspan="5" class="text-center">No tienes citas agendadas.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -115,4 +149,11 @@
     </div>
     {% endif %}
 
+<script>
+function completarCita(citaId) {
+    if (confirm('¿Marcar esta cita como completada?')) {
+        window.location.href = `/cita/${citaId}/completar`;
+    }
+}
+</script>
 {% endblock %}

@@ -10,7 +10,7 @@
                 <p class="fs-4 col-md-8 mx-auto">
                     Hola de nuevo, <strong>{{ current_user.username }}</strong>. ¿Qué te gustaría hacer?
                 </p>
-                <a class="btn btn-primary btn-lg" href="{{ url_for('main.dashboard') }}">Ir a mi Dashboard</a>
+                <a class="btn btn-primary btn-lg" href="{{ url_for('main.dashboard') }}">Ir a mi agenda</a>
                 <a class="btn btn-secondary btn-lg" href="{{ url_for('main.logout') }}">Cerrar Sesión</a>
             {% else %}
                 <p class="fs-4 col-md-8 mx-auto">

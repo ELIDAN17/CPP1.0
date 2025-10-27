@@ -1,22 +1,25 @@
-# en app/models.py
-
-from . import db  # La instancia de la BD creada en __init__.py
+from . import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from . import login_manager
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from flask import current_app
+from datetime import datetime
 
 class Usuario(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    telefono = db.Column(db.String(20), nullable=True)  # NUEVO: formato +51987654321
+    metodo_contacto_preferido = db.Column(db.Enum('email', 'sms'), default='email')  # NUEVO
+    fecha_nacimiento = db.Column(db.Date, nullable=True)  # NUEVO
+    genero = db.Column(db.Enum('masculino', 'femenino', 'otro'), nullable=True)  # NUEVO
     password_hash = db.Column(db.String(256))
-    # Añadimos 'admin' a las opciones de rol
+    
     ROL_CHOICES = (
         ('paciente', 'Paciente'),
         ('medico', 'Medico'),
-        ('admin', 'Admin'), # <-- AÑADIDO
+        ('admin', 'Admin'),
     )
     rol = db.Column(db.String(10), nullable=False)
 
@@ -27,7 +30,10 @@ class Usuario(db.Model, UserMixin):
     )
     estado_verificacion = db.Column(db.String(10), nullable=False, default='aprobado')
     
-    # --- NUEVOS MÉTODOS PARA EL TOKEN ---
+    # --- NUEVAS RELACIONES ---
+    mensajes_enviados = db.relationship('Mensaje', foreign_keys='Mensaje.usuario_id', backref='remitente', lazy='dynamic')
+    
+    # --- MÉTODOS EXISTENTES ---
     def get_reset_token(self, expires_sec=1800):
         s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id})
@@ -41,24 +47,20 @@ class Usuario(db.Model, UserMixin):
             return None
         return Usuario.query.get(user_id)
     
-    # Nuevo método para establecer la contraseña
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
-    # Nuevo método para verificar la contraseña
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+        
     def __repr__(self):
         return f'<Usuario {self.username}>'
-    
-    
 
 class Medico(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     especialidad = db.Column(db.String(100), nullable=False)
     licencia_medica = db.Column(db.String(50))
     
-    # Relación con Usuario
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     biografia = db.Column(db.Text, nullable=True)
     foto_perfil = db.Column(db.String(200), nullable=True)
@@ -73,30 +75,124 @@ class Cita(db.Model):
     motivo_consulta = db.Column(db.Text)
     estado = db.Column(db.String(12), default='programada')
     
-    # Relaciones
+    # NUEVOS CAMPOS
+    recordatorio_enviado = db.Column(db.Boolean, default=False)
+    metodo_recordatorio = db.Column(db.Enum('email', 'sms', 'none'), default='none')
+    urgencia = db.Column(db.Enum('baja', 'media', 'alta'), default='media')
+    canal_consulta = db.Column(db.Enum('presencial', 'virtual'), default='presencial')
+    duracion_estimada = db.Column(db.Integer, default=30)  # minutos
+    
+    # Relaciones existentes
     paciente_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     medico_id = db.Column(db.Integer, db.ForeignKey('medico.id'), nullable=False)
     
     paciente = db.relationship('Usuario', backref='citas')
     medico = db.relationship('Medico', backref='citas')
+    
+    # NUEVAS RELACIONES
+    mensajes = db.relationship('Mensaje', backref='cita', lazy='dynamic')
+    historiales_medicos = db.relationship('HistorialMedico', backref='cita', lazy='dynamic')
+    triage = db.relationship('Triage', backref='cita', uselist=False)
 
     def __repr__(self):
         return f'<Cita {self.id}>'
 
-
 class Disponibilidad(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Relación con el médico
     medico_id = db.Column(db.Integer, db.ForeignKey('medico.id'), nullable=False)
     medico = db.relationship('Medico', backref='disponibilidades')
-
-    # Días de la semana (0=Lunes, 1=Martes, ..., 6=Domingo)
     dia_semana = db.Column(db.Integer, nullable=False)
     hora_inicio = db.Column(db.Time, nullable=False)
     hora_fin = db.Column(db.Time, nullable=False)
 
     def __repr__(self):
         dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-        return f'{self.medico.usuario.username} - {dias[self.dia_semana]}: {self.hora_inicio} a {self.hora_fin}'    
+        return f'{self.medico.usuario.username} - {dias[self.dia_semana]}: {self.hora_inicio} a {self.hora_fin}'
+
+# --- NUEVOS MODELOS ---
+
+class Mensaje(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cita_id = db.Column(db.Integer, db.ForeignKey('cita.id'), nullable=False)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    mensaje = db.Column(db.Text, nullable=False)
+    fecha_hora = db.Column(db.DateTime, default=datetime.utcnow)
+    leido = db.Column(db.Boolean, default=False)
+    tipo = db.Column(db.Enum('texto', 'archivo', 'sistema'), default='texto')
+    archivo_url = db.Column(db.String(500), nullable=True)
+
+    def __repr__(self):
+        return f'<Mensaje {self.id} - Cita {self.cita_id}>'
+
+class HistorialMedico(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    paciente_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    medico_id = db.Column(db.Integer, db.ForeignKey('medico.id'), nullable=False)
+    cita_id = db.Column(db.Integer, db.ForeignKey('cita.id'), nullable=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    tipo = db.Column(db.Enum('consulta', 'seguimiento', 'emergencia'), default='consulta')
+    diagnostico = db.Column(db.Text)
+    tratamiento = db.Column(db.Text)
+    medicamentos_recetados = db.Column(db.Text)
+    notas_medicas = db.Column(db.Text)
+    archivos_adjuntos = db.Column(db.JSON)
+
+    paciente = db.relationship('Usuario', foreign_keys=[paciente_id])
+    medico = db.relationship('Medico', foreign_keys=[medico_id])
+
+    def __repr__(self):
+        return f'<HistorialMedico {self.id} - Paciente {self.paciente_id}>'
+
+class Triage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cita_id = db.Column(db.Integer, db.ForeignKey('cita.id'), nullable=False)
+    paciente_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    cuestionario = db.Column(db.JSON, nullable=False)
+    puntuacion_urgencia = db.Column(db.Integer, default=0)
+    recomendaciones = db.Column(db.Text)
+    fecha_completado = db.Column(db.DateTime, default=datetime.utcnow)
+
+    paciente = db.relationship('Usuario', foreign_keys=[paciente_id])
+
+    def __repr__(self):
+        return f'<Triage {self.id} - Cita {self.cita_id}>'
+
+class Notificacion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    tipo = db.Column(db.Enum('recordatorio_cita', 'confirmacion', 'cancelacion', 'mensaje', 'sistema'))
+    titulo = db.Column(db.String(200), nullable=False)
+    mensaje = db.Column(db.Text, nullable=False)
+    fecha_envio = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_leido = db.Column(db.DateTime, nullable=True)
+    estado = db.Column(db.Enum('pendiente', 'enviado', 'leido', 'fallido'), default='pendiente')
+    metodo = db.Column(db.Enum('email', 'sms', 'push'), nullable=False)
+
+    usuario = db.relationship('Usuario', foreign_keys=[usuario_id])
+
+    def __repr__(self):
+        return f'<Notificacion {self.id} - {self.tipo}>'
     
+# En models.py, agregar después de los otros modelos
+class SolicitudMedico(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+    fecha_solicitud = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    especialidad = db.Column(db.String(100), nullable=False)
+    licencia_medica = db.Column(db.String(50), nullable=False)
+    institucion = db.Column(db.String(200), nullable=False)
+    experiencia_anos = db.Column(db.String(20), nullable=False)
+    biografia = db.Column(db.Text, nullable=False)
+    
+    url_licencia = db.Column(db.String(500), nullable=False)
+    url_identidad = db.Column(db.String(500), nullable=False)
+    url_cv = db.Column(db.String(500))
+    
+    estado = db.Column(db.Enum('pendiente', 'aprobada', 'rechazada'), default='pendiente')
+    notas_admin = db.Column(db.Text)
+    
+    usuario = db.relationship('Usuario', backref=db.backref('solicitud_medico', uselist=False))
+    
+    def __repr__(self):
+        return f'<SolicitudMedico {self.id} - {self.usuario.username}>'

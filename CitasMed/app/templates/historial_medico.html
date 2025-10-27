@@ -1,0 +1,93 @@
+<!-- templates/historial_medico.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        📋 Historial Médico - {{ paciente.username }}
+                    </h4>
+                    <small class="text-light">
+                        Cita: {{ cita.fecha_hora.strftime('%d/%m/%Y a las %H:%M') }} - 
+                        {{ cita.motivo_consulta or 'Consulta general' }}
+                    </small>
+                </div>
+
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo de Consulta:</label>
+                                <select name="tipo" class="form-select">
+                                    <option value="consulta" {% if historial and historial.tipo == 'consulta' %}selected{% endif %}>Consulta General</option>
+                                    <option value="seguimiento" {% if historial and historial.tipo == 'seguimiento' %}selected{% endif %}>Seguimiento</option>
+                                    <option value="emergencia" {% if historial and historial.tipo == 'emergencia' %}selected{% endif %}>Emergencia</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Urgencia:</label>
+                                <select name="urgencia" class="form-select">
+                                    <option value="alta" {% if historial and historial.urgencia == 'alta' %}selected{% endif %}>Alta</option>
+                                    <option value="media" {% if historial and historial.urgencia == 'media' %}selected{% endif %}>Media</option>
+                                    <option value="baja" {% if historial and historial.urgencia == 'baja' %}selected{% endif %}>Baja</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Diagnóstico:</label>
+                            <textarea name="diagnostico" class="form-control" rows="4" 
+                                      placeholder="Describa el diagnóstico...">{% if historial %}{{ historial.diagnostico or '' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Tratamiento Indicado:</label>
+                            <textarea name="tratamiento" class="form-control" rows="3" 
+                                      placeholder="Describa el tratamiento...">{% if historial %}{{ historial.tratamiento or '' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Medicamentos Recetados:</label>
+                            <textarea name="medicamentos" class="form-control" rows="2" 
+                                      placeholder="Lista de medicamentos...">{% if historial %}{{ historial.medicamentos_recetados or '' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notas Médicas Adicionales:</label>
+                            <textarea name="notas_medicas" class="form-control" rows="3" 
+                                      placeholder="Observaciones adicionales...">{% if historial %}{{ historial.notas_medicas or '' }}{% endif %}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-success">Guardar Historial</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('main.chat_cita', cita_id=cita.id) }}" class="btn btn-info">
+                            💬 Ir al Chat
+                        </a>
+                        <a href="{{ url_for('main.ver_historial_paciente', paciente_id=paciente.id) }}" class="btn btn-outline-primary">
+                            📊 Ver Historial Completo
+                        </a>
+                        {% if cita.canal_consulta == 'virtual' %}
+                        <a href="{{ url_for('main.iniciar_consulta_virtual', cita_id=cita.id) }}" class="btn btn-warning">
+                            🎥 Iniciar Consulta Virtual
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

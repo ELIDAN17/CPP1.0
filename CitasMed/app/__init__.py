@@ -7,6 +7,7 @@ from config import Config
 from flask_login import LoginManager
 from flask_mail import Mail
 
+
 # Creamos una instancia de la base de datos
 db = SQLAlchemy()
 login_manager = LoginManager() # Crear instancia

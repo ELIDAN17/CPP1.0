@@ -18,7 +18,30 @@
                             <input type="email" class="form-control" name="email" id="email" required>
                         </div>
                     </div>
-                    
+                    <!-- NUEVO: Campos de teléfono -->
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label for="codigo_pais" class="form-label">País:</label>
+        <select name="codigo_pais" id="codigo_pais" class="form-select">
+            <option value="51" selected>🇵🇪 Perú (+51)</option>
+            <option value="1">🇺🇸 USA (+1)</option>
+            <option value="52">🇲🇽 México (+52)</option>
+            <option value="54">🇦🇷 Argentina (+54)</option>
+            <option value="55">🇧🇷 Brasil (+55)</option>
+            <option value="56">🇨🇱 Chile (+56)</option>
+            <option value="57">🇨🇴 Colombia (+57)</option>
+            <option value="58">🇻🇪 Venezuela (+58)</option>
+            <option value="34">🇪🇸 España (+34)</option>
+        </select>
+    </div>
+    <div class="col-md-8 mb-3">
+        <label for="telefono" class="form-label">Teléfono:</label>
+        <input type="tel" class="form-control" name="telefono" id="telefono" 
+               placeholder="987654321" pattern="[0-9]{9,12}">
+        <div class="form-text">Ejemplo: 987654321 (sin espacios ni guiones)</div>
+    </div>
+</div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="password" class="form-label">Contraseña:</label>
@@ -28,16 +51,10 @@
                             <label for="rol" class="form-label">Tipo de Cuenta:</label>
                             <select name="rol" id="rol" class="form-select">
                                 <option value="paciente">Paciente</option>
-                                <option value="medico">Médico</option>
                             </select>
+                            <div class="form-text">¿Eres un médico? Registrate como paciente y luego solicita verificación documental para médico.</div>
                         </div>
                     </div>
-
-                    <div class="mb-3" id="especialidad-container" style="display: none;">
-                        <label for="especialidad" class="form-label">Especialidad Médica:</label>
-                        <input type="text" class="form-control" name="especialidad" id="especialidad">
-                    </div>
-
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">Registrarse</button>
                     </div>

@@ -46,4 +46,21 @@
         </div>
     </div>
 
+    <!-- En admin.html, agregar este botón -->
+    <div class="card mb-4">
+        <div class="card-header">
+            Sistema de Recordatorios
+        </div>
+        <div class="card-body">
+            <a href="{{ url_for('main.enviar_recordatorios_manual') }}" 
+                class="btn btn-warning" 
+                onclick="return confirm('¿Ejecutar sistema de recordatorios?')">
+                🔔 Enviar Recordatorios Manualmente
+            </a>
+            <small class="text-muted d-block mt-1">
+                Envía recordatorios de citas (24h antes) a todos los pacientes.
+            </small>
+        </div>
+    </div>
+
 {% endblock %}

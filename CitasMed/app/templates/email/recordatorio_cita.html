@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .button {
+            background-color: #28a745;
+            color: white !important;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .recordatorio {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body style="font-family: sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="20" style="background-color: #ffffff; border-radius: 8px;">
+                    <tr>
+                        <td align="center" style="border-bottom: 1px solid #dddddd;">
+                            <h1 style="color: #333333;">🔔 Recordatorio de Cita</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 0;">
+                            <p style="color: #555555; font-size: 16px;">Hola {{ paciente.username }},</p>
+                            
+                            <div class="recordatorio">
+                                <p style="color: #856404; font-size: 16px; margin: 0;">
+                                    <strong>Recordatorio:</strong> Tienes una cita médica programada para <strong>mañana</strong>.
+                                </p>
+                            </div>
+                            
+                            <p style="color: #555555; font-size: 16px;">Detalles de tu cita:</p>
+                            <table width="100%" border="0" cellspacing="0" cellpadding="10" style="background-color: #f9f9f9; border: 1px solid #dddddd; margin-top: 20px;">
+                                <tr>
+                                    <td width="120" style="color: #333333;"><b>Médico:</b></td>
+                                    <td style="color: #555555;">Dr. {{ medico.usuario.username }} - {{ medico.especialidad }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #333333;"><b>Fecha y Hora:</b></td>
+                                    <td style="color: #555555;">{{ cita.fecha_hora.strftime('%d de %B de %Y a las %H:%M') }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #333333;"><b>Motivo:</b></td>
+                                    <td style="color: #555555;">{{ cita.motivo_consulta or 'Consulta general' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: #333333;"><b>Duración:</b></td>
+                                    <td style="color: #555555;">{{ cita.duracion_estimada }} minutos</td>
+                                </tr>
+                                {% if cita.canal_consulta == 'virtual' %}
+                                <tr>
+                                    <td style="color: #333333;"><b>Tipo:</b></td>
+                                    <td style="color: #555555;">🖥️ Consulta Virtual</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td style="color: #333333;"><b>Tipo:</b></td>
+                                    <td style="color: #555555;">🏥 Consulta Presencial</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 20px 0;">
+                            <p style="color: #555555; font-size: 14px;">
+                                <strong>Preparación para la cita:</strong><br>
+                                {% if cita.canal_consulta == 'virtual' %}
+                                • Asegúrate de tener buena conexión a internet<br>
+                                • Encuentra un lugar tranquilo y bien iluminado<br>
+                                • Ten a mano tus documentos médicos si es necesario
+                                {% else %}
+                                • Llega 10 minutos antes de tu cita<br>
+                                • Trae tu documento de identidad<br>
+                                • Ten lista tu historia médica si es primera vez
+                                {% endif %}
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td align="center" style="padding: 20px 0; border-top: 1px solid #dddddd;">
+                            <a href="{{ url_for('main.dashboard', _external=True) }}" class="button">
+                                Ver mis Citas
+                            </a>
+                            <p style="color: #888888; font-size: 12px; margin-top: 20px;">
+                                ¿Necesitas cancelar o reprogramar? <br>
+                                Accede a tu dashboard o contacta con la clínica.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
