@@ -30,7 +30,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for usuario in usuarios %}
+                        {% for usuario in usuarios %}  <!-- CORREGIDO: usuario in usuarios -->
                         <tr>
                             <td>{{ usuario.id }}</td>
                             <td>{{ usuario.username }}</td>
@@ -50,6 +50,10 @@
                                     </form>
                                 {% endif %}
                             </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay usuarios registrados.</td>  <!-- CORREGIDO: colspan="6" -->
                         </tr>
                         {% endfor %}
                     </tbody>

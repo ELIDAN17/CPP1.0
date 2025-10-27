@@ -1,7 +1,7 @@
 # en app/routes.py
 from datetime import datetime, time, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from .models import Usuario, Cita, Disponibilidad, Medico, Mensaje, HistorialMedico, Notificacion
+from .models import Usuario, Cita, Disponibilidad, Medico, Mensaje, HistorialMedico, Notificacion, SolicitudMedico
 from . import db
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_login import current_user
@@ -123,17 +123,28 @@ def admin_panel():
     # 2. Obtener la lista de médicos pendientes
     medicos_pendientes = Usuario.query.filter_by(rol='medico', estado_verificacion='pendiente').all()
     
-    # NUEVO: Solicitudes de pacientes que quieren ser médicos
-    solicitudes_medicas = Usuario.query.filter_by(
-        estado_verificacion='solicitando_verificacion'
-    ).all()
+    from datetime import datetime, date
+    
+    total_usuarios = Usuario.query.count()
+    total_medicos = Usuario.query.filter_by(rol='medico', estado_verificacion='aprobado').count()
+    
+    # Citas de hoy
+    hoy = date.today()
+    citas_hoy = Cita.query.filter(
+        db.func.date(Cita.fecha_hora) == hoy,
+        Cita.estado == 'programada'
+    ).count()
+    
+    # Solicitudes pendientes (médicos pendientes)
+    solicitudes_pendientes = len(medicos_pendientes)
     
     return render_template('admin.html', 
                          medicos_pendientes=medicos_pendientes,
-                         solicitudes_medicas=solicitudes_medicas)
-    
-    # 3. Mostrar la página de admin con la lista
-    return render_template('admin.html', medicos_pendientes=medicos_pendientes)
+                         total_usuarios=total_usuarios,
+                         total_medicos=total_medicos,
+                         citas_hoy=citas_hoy,
+                         solicitudes_pendientes=solicitudes_pendientes)
+  
 
 # --- RUTA PARA APROBAR MÉDICOS ---
 @main.route('/admin/aprobar/<int:medico_id>')
@@ -194,35 +205,46 @@ def editar_usuario(usuario_id):
 @main.route('/admin/usuario/eliminar/<int:usuario_id>', methods=['POST'])
 @login_required
 def eliminar_usuario(usuario_id):
-    # Paso 1: Verificar que el usuario actual es un administrador
     if current_user.rol != 'admin':
-        flash('Acceso no autorizado.')
+        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('main.dashboard'))
 
-    # Paso 2: Encontrar al usuario que se quiere eliminar
     usuario_a_eliminar = Usuario.query.get_or_404(usuario_id)
 
-    # No permitir que el admin se elimine a sí mismo
     if usuario_a_eliminar.id == current_user.id:
-        flash('No puedes eliminar tu propia cuenta de administrador.')
+        flash('No puedes eliminar tu propia cuenta.', 'danger')
         return redirect(url_for('main.gestionar_usuarios'))
 
-    # Paso 3: Lógica de seguridad para médicos
-    if usuario_a_eliminar.rol == 'medico':
-        # Buscamos si el médico tiene citas asociadas
-        citas_existentes = Cita.query.filter_by(medico_id=usuario_a_eliminar.medico.id).first()
-        if citas_existentes:
-            flash('ERROR: Este médico no puede ser eliminado porque tiene citas agendadas. Por favor, cancela o reasigna sus citas primero.')
-            return redirect(url_for('main.gestionar_usuarios'))
+    try:
+        username = usuario_a_eliminar.username
         
-        # Si no tiene citas, también eliminamos su perfil de médico
-        db.session.delete(usuario_a_eliminar.medico)
+        # VERIFICAR si tiene citas futuras como médico
+        if usuario_a_eliminar.medico:
+            citas_futuras = Cita.query.filter(
+                Cita.medico_id == usuario_a_eliminar.medico.id,
+                Cita.fecha_hora > datetime.now(),
+                Cita.estado == 'programada'
+            ).count()
+            
+            if citas_futuras > 0:
+                flash(f'No se puede eliminar: tiene {citas_futuras} citas futuras programadas.', 'warning')
+                return redirect(url_for('main.gestionar_usuarios'))
+        
+        # ELIMINACIÓN (tu código actual)
+        Cita.query.filter_by(paciente_id=usuario_id).delete()
+        
+        if usuario_a_eliminar.medico:
+            Cita.query.filter_by(medico_id=usuario_a_eliminar.medico.id).delete()
+            db.session.delete(usuario_a_eliminar.medico)
+        
+        db.session.delete(usuario_a_eliminar)
+        db.session.commit()
+        flash(f'Usuario "{username}" eliminado correctamente.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al eliminar: {str(e)}', 'danger')
 
-    # Paso 4: Eliminar al usuario y guardar cambios
-    db.session.delete(usuario_a_eliminar)
-    db.session.commit()
-
-    flash(f'El usuario "{usuario_a_eliminar.username}" ha sido eliminado con éxito.')
     return redirect(url_for('main.gestionar_usuarios'))
 
 @main.route('/dashboard')

@@ -3,6 +3,41 @@
 {% block content %}
     <h1 class="mb-4">Panel de Administración</h1>
 
+    <div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h4>{{ total_usuarios }}</h4>
+                <p>Total Usuarios</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h4>{{ total_medicos }}</h4>
+                <p>Médicos Activos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h4>{{ citas_hoy }}</h4>
+                <p>Citas Hoy</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h4>{{ solicitudes_pendientes }}</h4>
+                <p>Solicitudes Pendientes</p>
+            </div>
+        </div>
+    </div>
+</div>
+
     <div class="card mb-4">
         <div class="card-header">
             Menú de Gestión
@@ -32,7 +67,8 @@
                             <td>{{ medico.username }}</td>
                             <td>{{ medico.email }}</td>
                             <td>
-                                <a href="{{ url_for('main.aprobar_medico', medico_id=medico.id) }}" class="btn btn-sm btn-success">Aprobar</a>
+                                 <a href="{{ url_for('main.aprobar_medico', medico_id=medico.id) }}" class="btn btn-sm btn-success">✅ Aprobar</a>
+                                 <a href="{{ url_for('main.rechazar_medico', medico_id=medico.id) }}" class="btn btn-sm btn-danger" onclick="return confirm('¿Rechazar médico?')">❌ Rechazar</a>
                             </td>
                         </tr>
                         {% else %}
@@ -43,23 +79,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-
-    <!-- En admin.html, agregar este botón -->
-    <div class="card mb-4">
-        <div class="card-header">
-            Sistema de Recordatorios
-        </div>
-        <div class="card-body">
-            <a href="{{ url_for('main.enviar_recordatorios_manual') }}" 
-                class="btn btn-warning" 
-                onclick="return confirm('¿Ejecutar sistema de recordatorios?')">
-                🔔 Enviar Recordatorios Manualmente
-            </a>
-            <small class="text-muted d-block mt-1">
-                Envía recordatorios de citas (24h antes) a todos los pacientes.
-            </small>
         </div>
     </div>
 
