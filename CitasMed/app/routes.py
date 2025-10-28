@@ -23,6 +23,45 @@ def formatear_telefono(codigo_pais, numero):
 # Creamos un "Blueprint" para organizar nuestras rutas
 main = Blueprint('main', __name__)
 
+@main.route('/debug_database')
+@login_required
+def debug_database():
+    if current_user.rol != 'admin':
+        return "Solo para admin"
+    
+    # Ver TODOS los usuarios
+    usuarios = Usuario.query.all()
+    
+    html = "<h1>🔍 DIAGNÓSTICO COMPLETO DE LA BASE DE DATOS</h1>"
+    
+    html += "<h2>📊 TODOS LOS USUARIOS:</h2>"
+    for usuario in usuarios:
+        html += f"""
+        <div style='border: 2px solid #333; margin: 10px; padding: 10px;'>
+            <h3>ID: {usuario.id} - {usuario.username}</h3>
+            <p>Email: {usuario.email}</p>
+            <p>Rol: <strong>{usuario.rol}</strong></p>
+            <p>Estado: <strong>{usuario.estado_verificacion}</strong></p>
+            <p>Teléfono: {usuario.telefono}</p>
+        </div>
+        """
+    
+    # Ver solicitudes médicas
+    solicitudes = SolicitudMedico.query.all()
+    html += "<h2>📋 SOLICITUDES MÉDICAS:</h2>"
+    for solicitud in solicitudes:
+        html += f"""
+        <div style='border: 2px solid blue; margin: 10px; padding: 10px;'>
+            <h3>Solicitud ID: {solicitud.id}</h3>
+            <p>Usuario ID: {solicitud.usuario_id}</p>
+            <p>Especialidad: {solicitud.especialidad}</p>
+            <p>Estado: <strong>{solicitud.estado}</strong></p>
+            <p>Fecha: {solicitud.fecha_solicitud}</p>
+        </div>
+        """
+    
+    return html
+
 @main.route('/')
 def index():
     return render_template('index.html')
@@ -32,16 +71,16 @@ def registro():
     if request.method == 'POST':
         # Obtenemos los datos del formulario
         username = request.form.get('username')
-        email = request.form.get('email').strip().lower()  # 🔥 Normalizar email
+        email = request.form.get('email').strip().lower()  
         password = request.form.get('password')
         rol = request.form.get('rol')
 
-        # 🔥🔥🔥 VALIDACIÓN GMAIL COMPLETA - REEMPLAZA TU CÓDIGO ACTUAL
+        # VALIDACIÓN GMAIL COMPLETA
         if not email.endswith('@gmail.com'):
             flash('Solo se permiten correos de Gmail (@gmail.com) para las notificaciones.', 'danger')
             return redirect(url_for('main.registro'))
 
-        # 🔥 NUEVO: Validación estricta del usuario Gmail
+        # Validación estricta del usuario Gmail
         usuario_gmail = email.split('@')[0]
         
         # Validar longitud
@@ -80,7 +119,7 @@ def registro():
         else:
             telefono_completo = None
 
-        # 🔥 VERIFICAR SI EMAIL YA EXISTE - AGREGAR ESTO TAMBIÉN
+        # VERIFICAR SI EMAIL YA EXISTE - AGREGAR ESTO TAMBIÉN
         usuario_existente = Usuario.query.filter_by(email=email).first()
         if usuario_existente:
             flash('Este correo electrónico ya está registrado.', 'danger')
@@ -161,7 +200,7 @@ def validar_email_tiempo_real():
             'mensaje': '❌ Solo se permiten correos Gmail (@gmail.com)'
         })
     
-    # 3. 🔥 VALIDACIÓN ESTRICTA del usuario Gmail
+    # 3. VALIDACIÓN ESTRICTA del usuario Gmail
     usuario = email.split('@')[0]
     
     # Reglas de Gmail oficiales:
@@ -307,9 +346,14 @@ def login():
 
         # Verificamos si el usuario existe y la contraseña es correcta
         if user and user.check_password(password):
-            # Verificamos si la cuenta está aprobada
+            # ✅ CORREGIDO: Mostrar mensajes específicos según el estado
             if user.estado_verificacion != 'aprobado':
-                flash('Tu cuenta está pendiente de aprobación.')
+                if user.estado_verificacion == 'pendiente':
+                    flash('Tu cuenta está pendiente de aprobación. Por favor, espera la revisión del administrador.', 'warning')
+                elif user.estado_verificacion == 'rechazada':
+                    flash('Tu solicitud de médico fue rechazada. Revisa tu dashboard para más detalles.', 'warning')
+                else:
+                    flash('Tu cuenta está pendiente de verificación.', 'warning')
                 return redirect(url_for('main.login'))
             
             login_user(user)
@@ -331,101 +375,120 @@ def logout():
 @main.route('/admin')
 @login_required
 def admin_panel():
-    # 1. Proteger la ruta: solo los admins pueden entrar
     if current_user.rol != 'admin':
         flash('Acceso no autorizado.')
         return redirect(url_for('main.dashboard'))
 
-    # 2. Obtener la lista de médicos pendientes
-    medicos_pendientes = Usuario.query.filter_by(rol='medico', estado_verificacion='pendiente').all()
+    # BUSCAR SOLICITUDES PENDIENTES
+    solicitudes_pendientes = SolicitudMedico.query.filter_by(estado='pendiente').all()
     
+    # Debug en consola
+    print(f"🔍 ADMIN: {len(solicitudes_pendientes)} solicitudes pendientes encontradas")
+    for solicitud in solicitudes_pendientes:
+        print(f"  - Solicitud ID: {solicitud.id}, Usuario ID: {solicitud.usuario_id}")
+
     from datetime import datetime, date
     
     total_usuarios = Usuario.query.count()
     total_medicos = Usuario.query.filter_by(rol='medico', estado_verificacion='aprobado').count()
     
-    # Citas de hoy
     hoy = date.today()
     citas_hoy = Cita.query.filter(
         db.func.date(Cita.fecha_hora) == hoy,
         Cita.estado == 'programada'
     ).count()
     
-    # Solicitudes pendientes (médicos pendientes)
-    solicitudes_pendientes = len(medicos_pendientes)
-    
     return render_template('admin.html', 
-                         medicos_pendientes=medicos_pendientes,  
+                         solicitudes_pendientes=solicitudes_pendientes,  
                          total_usuarios=total_usuarios,
                          total_medicos=total_medicos,
                          citas_hoy=citas_hoy,
-                         solicitudes_pendientes=solicitudes_pendientes) 
-  
+                         total_solicitudes=len(solicitudes_pendientes))
 
-# --- RUTA PARA APROBAR MÉDICOS ---
-@main.route('/admin/aprobar/<int:medico_id>')
+@main.route('/admin/aprobar/<int:usuario_id>')
 @login_required
-def aprobar_medico(medico_id):
+def aprobar_medico(usuario_id):
     if current_user.rol != 'admin':
         flash('Acceso no autorizado.')
         return redirect(url_for('main.dashboard'))
 
-    # Buscar al médico por su ID
-    medico = Usuario.query.get(medico_id)
-    if medico and medico.rol == 'medico' and medico.estado_verificacion == 'pendiente':
-        # Cambiar su estado a aprobado
-        medico.estado_verificacion = 'aprobado'
+    try:
+        # Buscar usuario y su solicitud pendiente
+        usuario = Usuario.query.get(usuario_id)
+        solicitud = SolicitudMedico.query.filter_by(usuario_id=usuario_id, estado='pendiente').first()
         
-        # ✅ VERIFICAR y crear el perfil médico
-        perfil_existente = Medico.query.filter_by(usuario_id=medico.id).first()
+        if not usuario or not solicitud:
+            flash('❌ Usuario o solicitud no encontrada.')
+            return redirect(url_for('main.admin_panel'))
+        
+        print(f"✅ APROBANDO: Usuario {usuario.username} (ID: {usuario.id})")
+        
+        # 1. Actualizar usuario
+        usuario.rol = 'medico'
+        usuario.estado_verificacion = 'aprobado'
+        
+        # 2. Actualizar solicitud
+        solicitud.estado = 'aprobada'
+        
+        # 3. Crear perfil médico si no existe
+        perfil_existente = Medico.query.filter_by(usuario_id=usuario.id).first()
         if not perfil_existente:
-            # Buscar datos de la solicitud
-            solicitud = SolicitudMedico.query.filter_by(usuario_id=medico.id).first()
-            
-            perfil_medico = Medico(
-                usuario_id=medico.id,
-                especialidad=solicitud.especialidad if solicitud else 'General',
-                biografia=solicitud.biografia if solicitud else '',
-                licencia_medica=solicitud.licencia_medica if solicitud else ''
+            nuevo_medico = Medico(
+                usuario_id=usuario.id,
+                especialidad=solicitud.especialidad,
+                biografia=solicitud.biografia,
+                licencia_medica=solicitud.licencia_medica
             )
-            db.session.add(perfil_medico)
+            db.session.add(nuevo_medico)
+            print(f"✅ CREADO perfil médico para {usuario.username}")
         
         db.session.commit()
-        flash(f'El médico {medico.username} ha sido aprobado.')
-    else:
-        flash('Médico no encontrado o ya está aprobado.')
-
+        flash(f'✅ Médico {usuario.username} aprobado correctamente.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ ERROR al aprobar: {str(e)}")
+        flash(f'❌ Error al aprobar médico: {str(e)}', 'danger')
+    
     return redirect(url_for('main.admin_panel'))
 
-@main.route('/admin/rechazar/<int:medico_id>')
+@main.route('/admin/rechazar/<int:usuario_id>')
 @login_required
-def rechazar_medico(medico_id):
+def rechazar_medico(usuario_id):
     if current_user.rol != 'admin':
         flash('Acceso no autorizado.')
         return redirect(url_for('main.dashboard'))
 
-    # Buscar al médico por su ID
-    medico = Usuario.query.get(medico_id)
-    if medico and medico.rol == 'medico' and medico.estado_verificacion == 'pendiente':
-        # Cambiar el rol de vuelta a paciente y estado a aprobado
-        medico.rol = 'paciente'
-        medico.estado_verificacion = 'aprobado'
+    try:
+        usuario = Usuario.query.get(usuario_id)
+        solicitud = SolicitudMedico.query.filter_by(usuario_id=usuario_id, estado='pendiente').first()
         
-        # Marcar la solicitud como rechazada si existe
-        if hasattr(medico, 'solicitud_medico') and medico.solicitud_medico:
-            medico.solicitud_medico.estado = 'rechazada'
-            medico.solicitud_medico.fecha_revision = datetime.now()
-            medico.solicitud_medico.admin_revisor_id = current_user.id
+        if not usuario or not solicitud:
+            flash('❌ Usuario o solicitud no encontrada.')
+            return redirect(url_for('main.admin_panel'))
+        
+        print(f"❌ RECHAZANDO: Usuario {usuario.username} (ID: {usuario.id})")
+        
+        # ✅ CORREGIDO: Cambiar estado a 'rechazada' en lugar de 'aprobado'
+        usuario.rol = 'paciente'
+        usuario.estado_verificacion = 'rechazada'  # ← ESTA ES LA CLAVE
+        
+        # Marcar solicitud como rechazada y agregar nota
+        solicitud.estado = 'rechazada'
+        solicitud.notas_admin = f"Solicitud rechazada el {datetime.now().strftime('%d/%m/%Y')}. Motivo: Documentación insuficiente o no válida."
         
         db.session.commit()
-        flash(f'La solicitud de {medico.username} ha sido rechazada.')
-    else:
-        flash('Médico no encontrado o ya fue procesado.')
-
+        flash(f'❌ Solicitud de {usuario.username} rechazada.', 'warning')
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ ERROR al rechazar: {str(e)}")
+        flash(f'❌ Error al rechazar solicitud: {str(e)}', 'danger')
+    
     return redirect(url_for('main.admin_panel'))
 
 
-
+  
 @main.route('/admin/usuarios')
 @login_required
 def gestionar_usuarios():
@@ -476,37 +539,53 @@ def eliminar_usuario(usuario_id):
     try:
         username = usuario_a_eliminar.username
         
-        # VERIFICAR si tiene citas futuras como médico
+        # ✅ OPCIÓN SEGURA: Marcar como eliminado en lugar de borrar
+        # 1. Cambiar el username y email para indicar que fue eliminado
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        usuario_a_eliminar.username = f"usuario_eliminado_{usuario_id}_{timestamp}"
+        usuario_a_eliminar.email = f"eliminado_{usuario_id}_{timestamp}@example.com"
+        usuario_a_eliminar.telefono = None
+        usuario_a_eliminar.estado_verificacion = 'eliminado'
+
+        # Cambiar la contraseña por seguridad
+        usuario_a_eliminar.set_password("password_eliminado_" + timestamp)
+        
+        # 2. Si es médico, desactivar el perfil médico
         if usuario_a_eliminar.medico:
+            usuario_a_eliminar.medico.biografia = "⚠️ Este médico ya no está disponible en la plataforma"
+
+        # Cancelar citas futuras
+        citas_futuras = []
+        
+        # 3. Cancelar citas futuras
+        if usuario_a_eliminar.rol == 'medico' and usuario_a_eliminar.medico:
             citas_futuras = Cita.query.filter(
                 Cita.medico_id == usuario_a_eliminar.medico.id,
                 Cita.fecha_hora > datetime.now(),
-                Cita.estado == 'programada'
-            ).count()
+                Cita.estado.in_(['programada', 'reprogramada'])).all()
+        elif usuario_a_eliminar.rol == 'paciente':
+            # Cancelar citas futuras como paciente
+            citas_futuras = Cita.query.filter(
+                Cita.paciente_id == usuario_id,
+                Cita.fecha_hora > datetime.now(),
+                Cita.estado.in_(['programada', 'reprogramada'])).all()    
             
-            if citas_futuras > 0:
-                flash(f'No se puede eliminar: tiene {citas_futuras} citas futuras programadas.', 'warning')
-                return redirect(url_for('main.gestionar_usuarios'))
+        for cita in citas_futuras:
+                cita.estado = 'cancelada'
+                # Opcional: enviar notificación a los pacientes
         
-        # ELIMINACIÓN (tu código actual)
-        Cita.query.filter_by(paciente_id=usuario_id).delete()
-        
-        if usuario_a_eliminar.medico:
-            Cita.query.filter_by(medico_id=usuario_a_eliminar.medico.id).delete()
-            db.session.delete(usuario_a_eliminar.medico)
-        
-        db.session.delete(usuario_a_eliminar)
         db.session.commit()
-        flash(f'Usuario "{username}" eliminado correctamente.', 'success')
+        flash(f'✅ Usuario "{username}" marcado como eliminado correctamente.', 'success')
         
     except Exception as e:
         db.session.rollback()
-        flash(f'Error al eliminar: {str(e)}', 'danger')
+        print(f"❌ ERROR al eliminar usuario {usuario_id}: {str(e)}")
+        flash(f'❌ Error al eliminar usuario: {str(e)}', 'danger')
 
     return redirect(url_for('main.gestionar_usuarios'))
 
 @main.route('/dashboard')
-@login_required # Este decorador protege la página
+@login_required 
 def dashboard():
     # Si el usuario es un admin, lo redirigimos a su panel especial
     if current_user.rol == 'admin':
@@ -517,12 +596,17 @@ def dashboard():
         # Buscamos las citas del paciente
         citas = Cita.query.filter_by(paciente_id=current_user.id).order_by(Cita.fecha_hora.asc()).all()
     
-    # Si es médico, lo llevamos a su dashboard (que por ahora solo tiene un enlace)
+    # Si es médico, lo llevamos a su dashboard
     elif current_user.rol == 'medico':
         citas = Cita.query.filter_by(medico_id=current_user.medico.id).order_by(Cita.fecha_hora.asc()).all()
     
-    if current_user.rol == 'paciente':
-        citas = Cita.query.filter_by(paciente_id=current_user.id).order_by(Cita.fecha_hora.asc()).all()
+    # ✅ NUEVO: Verificar si el usuario tiene una solicitud médica rechazada
+    solicitud_rechazada = None
+    if current_user.rol == 'paciente' and current_user.estado_verificacion == 'rechazada':
+        solicitud_rechazada = SolicitudMedico.query.filter_by(
+            usuario_id=current_user.id, 
+            estado='rechazada'
+        ).order_by(SolicitudMedico.fecha_solicitud.desc()).first()
     
     # Pasamos información sobre si puede solicitar ser médico
     puede_solicitar_medico = (
@@ -530,8 +614,11 @@ def dashboard():
         current_user.estado_verificacion == 'aprobado'
     )
     
-    # Pasamos las citas a la nueva plantilla del dashboard
-    return render_template('dashboard.html', citas=citas, puede_solicitar_medico=puede_solicitar_medico)
+    # ✅ Pasamos la información de solicitud rechazada al template
+    return render_template('dashboard.html', 
+                         citas=citas, 
+                         puede_solicitar_medico=puede_solicitar_medico,
+                         solicitud_rechazada=solicitud_rechazada)
 
 
 
@@ -598,12 +685,10 @@ def perfil_medico(medico_id):
     # 3. Solo usar los días específicos que el médico configuró
     hoy = datetime.now().date()
     
-    # Crear un conjunto de días únicos que el médico tiene configurados
     dias_configurados = set()
     for disponibilidad in disponibilidades:
         dias_configurados.add(disponibilidad.dia_semana)
     
-    # Para cada día de la semana configurado, generar horarios para los próximos 7 días
     for i in range(7):  # Reducido a 7 días para mayor precisión
         dia_actual = hoy + timedelta(days=i)
         dia_semana_actual = dia_actual.weekday()
@@ -625,8 +710,6 @@ def perfil_medico(medico_id):
     
     # Ordenar los horarios por fecha y hora
     horarios_libres.sort()
-    
-    # --- FIN DE LA LÓGICA ---
     
     return render_template('perfil_medico.html', medico=medico, horarios_libres=horarios_libres)
 
@@ -658,7 +741,7 @@ def agendar(medico_id):
             medico_id=medico.id,
             fecha_hora=slot_dt,
             estado='programada',
-            motivo_consulta=motivo # Puedes añadir un campo para esto en el futuro
+            motivo_consulta=motivo 
         )
         db.session.add(nueva_cita)
         db.session.commit()
@@ -666,7 +749,7 @@ def agendar(medico_id):
         try:
             msg = Message(
                 'Confirmación de Cita Médica',
-                sender='tu_correo@gmail.com', # <-- El mismo correo que en config.py
+                sender='tu_correo@gmail.com', 
                 recipients=[current_user.email] # <-- Se envía al email del paciente
             )
             msg.html = render_template(
@@ -680,7 +763,6 @@ def agendar(medico_id):
         except Exception as e:
             # Si el correo falla, la cita ya está guardada. Solo informamos del error del correo.
             flash(f'¡Tu cita ha sido agendada con éxito! Sin embargo, no se pudo enviar el correo de confirmación. Error: {e}')
-        # --- FIN DE LA LÓGICA DEL CORREO ---
         
         return redirect(url_for('main.dashboard'))
 
@@ -840,7 +922,7 @@ def editar_perfil_medico():
 def send_reset_email(user):
     token = user.get_reset_token()
     msg = Message('Solicitud de Reseteo de Contraseña',
-                  sender='tu_correo@gmail.com', # El correo configurado en config.py
+                  sender='tu_correo@gmail.com', 
                   recipients=[user.email])
     msg.body = f'''Para resetear tu contraseña, visita el siguiente enlace:
 {url_for('main.reset_password', token=token, _external=True)}
@@ -881,7 +963,6 @@ def reset_password(token):
         
     return render_template('reset_password.html')
 
-# Añadir estas nuevas rutas al archivo existente routes.py
 
 @main.route('/cita/<int:cita_id>/chat')
 @login_required
@@ -1005,7 +1086,6 @@ def completar_cita(cita_id):
         # Verificar que la cita ya pasó (opcional)
         if cita.fecha_hora > datetime.now():
             flash('⚠️ Esta cita aún no ha llegado. ¿Estás seguro de completarla?', 'warning')
-            # Podrías agregar confirmación adicional aquí
         
         # Cambiar estado
         cita.estado = 'completada'
@@ -1080,27 +1160,6 @@ def ver_historial_paciente(paciente_id):
                          historiales=historiales)
     
 
-
-@main.route('/cita/<int:cita_id>/iniciar_consulta')
-@login_required
-def iniciar_consulta_virtual(cita_id):
-    # Para consultas virtuales - cambiar estado
-    if current_user.rol != 'medico':
-        flash('Acceso no autorizado.')
-        return redirect(url_for('main.dashboard'))
-    
-    cita = Cita.query.get_or_404(cita_id)
-    if cita.medico_id != current_user.medico.id:
-        flash('No tienes acceso a esta cita.')
-        return redirect(url_for('main.dashboard'))
-    
-    cita.estado = 'en_consulta'
-    cita.canal_consulta = 'virtual'
-    db.session.commit()
-    
-    flash('Consulta virtual iniciada. El paciente puede unirse.')
-    return redirect(url_for('main.chat_cita', cita_id=cita_id))
-
 @main.route('/perfil/editar', methods=['GET', 'POST'])
 @login_required
 def editar_perfil():
@@ -1108,14 +1167,14 @@ def editar_perfil():
         # Obtener el nuevo email del formulario
         nuevo_email = request.form.get('email').strip().lower()
         
-        # 🔥 SOLO validar si el email CAMBIÓ
+        # SOLO validar si el email CAMBIÓ
         if nuevo_email != current_user.email:
             # Validar que sea Gmail
             if not nuevo_email.endswith('@gmail.com'):
                 flash('Solo se permiten correos de Gmail (@gmail.com) para las notificaciones.', 'danger')
                 return redirect(url_for('main.editar_perfil'))
             
-            # 🔥 Validación estricta del usuario Gmail (solo si cambió)
+            # Validación estricta del usuario Gmail (solo si cambió)
             usuario_gmail = nuevo_email.split('@')[0]
             
             if len(usuario_gmail) < 6:
@@ -1138,10 +1197,10 @@ def editar_perfil():
                 flash('No se permiten puntos consecutivos en el usuario Gmail.', 'danger')
                 return redirect(url_for('main.editar_perfil'))
             
-            # 🔥 Validar si el NUEVO email ya existe (excluyendo el usuario actual)
+            # Validar si el NUEVO email ya existe
             usuario_existente = Usuario.query.filter(
                 Usuario.email == nuevo_email,
-                Usuario.id != current_user.id  # Excluir al usuario actual
+                Usuario.id != current_user.id 
             ).first()
             
             if usuario_existente:
@@ -1180,6 +1239,23 @@ def editar_perfil():
     
     return render_template('editar_perfil.html')
 
+@main.route('/admin/agregar_nota/<int:solicitud_id>', methods=['POST'])
+@login_required
+def agregar_nota_solicitud(solicitud_id):
+    if current_user.rol != 'admin':
+        flash('Acceso no autorizado.')
+        return redirect(url_for('main.dashboard'))
+
+    solicitud = SolicitudMedico.query.get_or_404(solicitud_id)
+    nota = request.form.get('nota_admin', '').strip()
+    
+    if nota:
+        solicitud.notas_admin = nota
+        db.session.commit()
+        flash('Nota agregada correctamente.')
+    
+    return redirect(url_for('main.verificar_documentos', solicitud_id=solicitud_id))
+
 @main.route('/solicitar_medico', methods=['GET', 'POST'])
 @login_required
 def solicitar_medico():
@@ -1187,34 +1263,31 @@ def solicitar_medico():
         flash('Ya tienes un rol asignado.', 'warning')
         return redirect(url_for('main.dashboard'))
     
-    # Verificar si ya tiene solicitud pendiente
-    solicitud_existente = SolicitudMedico.query.filter_by(usuario_id=current_user.id, estado='pendiente').first()
-    if solicitud_existente:
-        flash('Ya tienes una solicitud médica pendiente de revisión.', 'info')
-        return redirect(url_for('main.dashboard'))
-    
     if request.method == 'POST':
         try:
-            # Obtener datos del formulario
-            especialidad = request.form.get('especialidad')
-            licencia_medica = request.form.get('licencia_medica')
-            institucion = request.form.get('institucion')
-            experiencia_anos = request.form.get('experiencia_anos')
-            biografia = request.form.get('biografia')
-            url_licencia = request.form.get('url_licencia')
-            url_identidad = request.form.get('url_identidad')
-            url_cv = request.form.get('url_cv')
+            # Obtener datos del formulario (asegúrate de capturar los URLs)
+            especialidad = request.form.get('especialidad', '').strip()
+            licencia_medica = request.form.get('licencia_medica', '').strip()
+            institucion = request.form.get('institucion', '').strip()
+            experiencia_anos = request.form.get('experiencia_anos', '').strip()
+            biografia = request.form.get('biografia', '').strip()
             
-            # ✅ SOLUCIÓN: Obtener el objeto REAL de la base de datos
-            usuario_db = Usuario.query.get(current_user.id)
+            # 🔥 CAPTURAR LOS URLs DE DOCUMENTOS
+            url_licencia = request.form.get('url_licencia', '').strip()
+            url_identidad = request.form.get('url_identidad', '').strip()
+            url_cv = request.form.get('url_cv', '').strip()
             
-            # ✅ CAMBIAR ROL en la base de datos
-            usuario_db.rol = 'medico'
-            usuario_db.estado_verificacion = 'pendiente'
+            # Validar que los documentos requeridos estén presentes
+            if not url_licencia or not url_identidad:
+                flash('❌ Debe proporcionar los enlaces a la licencia médica y documento de identidad.', 'danger')
+                return redirect(url_for('main.solicitar_medico'))
             
-            # Crear solicitud
+            # Obtener el usuario actual
+            usuario = Usuario.query.get(current_user.id)
+            
+            # Crear solicitud CON LOS URLs
             nueva_solicitud = SolicitudMedico(
-                usuario_id=usuario_db.id,
+                usuario_id=usuario.id,
                 especialidad=especialidad,
                 licencia_medica=licencia_medica,
                 institucion=institucion,
@@ -1222,35 +1295,47 @@ def solicitar_medico():
                 biografia=biografia,
                 url_licencia=url_licencia,
                 url_identidad=url_identidad,
-                url_cv=url_cv
+                url_cv=url_cv,
+                estado='pendiente'
             )
             
             db.session.add(nueva_solicitud)
             db.session.commit()
             
-            # ✅ ACTUALIZAR la sesión del usuario
-            login_user(usuario_db)
-            
-            flash('¡Solicitud enviada correctamente! Será revisada por nuestro equipo.', 'success')
+            flash('✅ Solicitud enviada correctamente. El administrador revisará tus documentos.', 'success')
             return redirect(url_for('main.dashboard'))
             
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al enviar solicitud: {str(e)}', 'danger')
+            flash(f'❌ Error al enviar solicitud: {str(e)}', 'danger')
             return redirect(url_for('main.solicitar_medico'))
     
     return render_template('solicitud_medico.html')
 
+@main.route('/admin/verificar_documentos/<int:solicitud_id>')
+@login_required
+def verificar_documentos(solicitud_id):
+    if current_user.rol != 'admin':
+        flash('Acceso no autorizado.')
+        return redirect(url_for('main.dashboard'))
 
+    # Buscar la solicitud y el usuario
+    solicitud = SolicitudMedico.query.get_or_404(solicitud_id)
+    usuario = Usuario.query.get(solicitud.usuario_id)
+    
+    if not usuario:
+        flash('Usuario no encontrado.')
+        return redirect(url_for('main.admin_panel'))
+    
+    return render_template('verificar_documentos.html', 
+                         solicitud=solicitud, 
+                         usuario=usuario)
 
-# Agregar en routes.py
 @main.route('/perfil')
 @login_required
 def ver_perfil():
     return render_template('ver_perfil.html')
 
-
-# Agregar en routes.py
 from datetime import datetime, timedelta
 
 def enviar_recordatorios_citas():
@@ -1260,9 +1345,8 @@ def enviar_recordatorios_citas():
         ahora = datetime.now()
         recordatorio_min = ahora + timedelta(hours=23)  # 23-25h antes
         recordatorio_max = ahora + timedelta(hours=25)
-        
-        # Buscar citas que cumplan:
-        # - Estén entre 23-25 horas en el futuro
+
+        # - Citas 23-25 horas en el futuro
         # - Estado 'programada'
         # - Recordatorio no enviado
         citas_pendientes = Cita.query.filter(

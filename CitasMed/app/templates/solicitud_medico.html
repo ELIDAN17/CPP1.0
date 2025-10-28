@@ -7,6 +7,16 @@
             <div class="card-header bg-warning text-dark">
                 <h2 class="mb-0">🩺 Solicitar Verificación Médica</h2>
             </div>
+            {% if current_user.estado_verificacion == 'rechazada' %}
+            <div class="alert alert-warning">
+                <h5>🔄 Segunda Solicitud</h5>
+                <p class="mb-0">
+                    Tu solicitud anterior fue rechazada. Por favor, verifica que todos los documentos sean 
+                    <strong>oficiales, legibles y actualizados</strong> antes de enviar nuevamente.
+                </p>
+            </div>
+            {% endif %}
+            
             <div class="card-body">
                 <div class="alert alert-info">
                     <strong>Información importante:</strong> Para ser verificado como médico en nuestra plataforma, 

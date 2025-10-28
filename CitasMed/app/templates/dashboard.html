@@ -13,6 +13,40 @@
         {% endif %}
     {% endwith %}
 
+        {# ✅ ALERTA PARA SOLICITUDES RECHAZADAS - SOLO PARA EL USUARIO AFECTADO #}
+    {% if solicitud_rechazada and current_user.rol == 'paciente' %}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading">❌ Solicitud de Médico Rechazada</h5>
+        <p class="mb-2"><strong>Motivo:</strong> Documentación insuficiente o no válida.</p>
+        <p class="mb-3"><strong>Recomendaciones para una nueva solicitud:</strong></p>
+        <ul class="mb-3">
+            <li>Verifica que los documentos sean oficiales y legibles</li>
+            <li>Asegúrate de que la licencia médica esté vigente</li>
+            <li>Proporciona documentos de identidad claros y actualizados</li>
+            <li>Incluye tu CV profesional si es posible</li>
+            <li>Revisa que todos los enlaces de documentos funcionen correctamente</li>
+        </ul>
+        <hr>
+        <p class="mb-0">
+            <strong>¿Deseas intentarlo nuevamente?</strong> 
+            <a href="{{ url_for('main.solicitar_medico') }}" class="alert-link">Enviar nueva solicitud con documentos mejorados</a>
+        </p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    {# ✅ ALERTA PARA SOLICITUDES PENDIENTES - SOLO PARA EL USUARIO AFECTADO #}
+    {% if current_user.rol == 'paciente' and current_user.estado_verificacion == 'pendiente' %}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading">⏳ Solicitud de Médico en Revisión</h5>
+        <p class="mb-0">
+            Tu solicitud para ser médico está siendo revisada por nuestro equipo administrativo. 
+            Este proceso puede tomar hasta 48 horas. Te notificaremos cuando haya una decisión.
+        </p>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
     <h1 class="mb-4">Hola, {{ current_user.username|replace('_', ' ')|title }}!</h1>
 
     {# --- VISTA PARA PACIENTES --- #}
@@ -159,7 +193,7 @@
                             
                             <!-- CONSULTA VIRTUAL -->
                             {% if cita.canal_consulta == 'virtual' and cita.estado == 'programada' %}
-                                <a href="{{ url_for('main.iniciar_consulta_virtual', cita_id=cita.id) }}" class="btn btn-sm btn-primary" title="Consulta Virtual">🎥</a>
+                                <a href="{{ url_for('main.iniciar_consulta_virtual', cita_id=cita.id) }}" class="btn btn-sm btn-primary" title="Consulta Virtual">🎥 Consulta Virtual</a>
                             {% endif %}
                         </td>
                     </tr>
@@ -184,7 +218,6 @@ function confirmarCompletar(citaId) {
     }
 }
 
-// Versión alternativa con SweetAlert (más bonito)
 function completarCitaBonito(citaId) {
     Swal.fire({
         title: '¿Completar cita?',
