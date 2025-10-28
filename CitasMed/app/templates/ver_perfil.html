@@ -20,7 +20,7 @@
                     <div class="col-md-3 text-center">
                         {% if current_user.rol == 'medico' and current_user.medico and current_user.medico.foto_perfil %}
                             <img src="{{ current_user.medico.foto_perfil }}" 
-                                 alt="Foto del Dr. {{ current_user.username }}"
+                                 alt="Foto del Dr. {{ current_user.username|replace('_', ' ')|title }}"
                                  class="img-fluid rounded-circle border" 
                                  style="width: 150px; height: 150px; object-fit: cover;">
                         {% else %}
@@ -34,7 +34,7 @@
                     </div>
                     <div class="col-md-9">
                         <h3 class="mb-1">
-                            {% if current_user.rol == 'medico' %}Dr. {% endif %}{{ current_user.username }}
+                            {% if current_user.rol == 'medico' %}Dr. {% endif %}{{ current_user.username|replace('_', ' ')|title }}
                         </h3>
                         {% if current_user.rol == 'medico' and current_user.medico %}
                             <p class="text-muted mb-2">{{ current_user.medico.especialidad }}</p>
@@ -52,8 +52,13 @@
                         <h5 class="mb-3">📝 Información Personal</h5>
                         
                         <div class="mb-3">
-                            <strong>Usuario:</strong><br>
+                            <strong>Usuario para login:</strong><br>
                             <span class="text-muted">{{ current_user.username }}</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <strong>Nombre:</strong><br>
+                            <span class="text-muted">{{ current_user.username|replace('_', ' ')|title }}</span>
                         </div>
                         
                         <div class="mb-3">
@@ -125,39 +130,49 @@
                     </div>
                 </div>
 
-                {# Estadísticas (opcional) #}
-                {% if current_user.rol == 'medico' %}
+                <!-- 📊 Estadísticas REALES -->
+                {% if current_user.rol == 'medico' and current_user.medico %}
                 <div class="row mt-4">
                     <div class="col-12">
-                        <h5 class="mb-3">📊 Estadísticas</h5>
+                        <h5 class="mb-3">📊 Mis Estadísticas</h5>
                         <div class="row text-center">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card bg-light">
                                     <div class="card-body">
                                         <h4 class="text-primary">
-                                            {{ current_user.citas|length }}
+                                            {{ current_user.medico.citas|length }}
                                         </h4>
                                         <small>Citas Totales</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card bg-light">
                                     <div class="card-body">
                                         <h4 class="text-success">
-                                            {{ current_user.citas|selectattr('estado', 'equalto', 'completada')|list|length }}
+                                            {{ current_user.medico.citas|selectattr('estado', 'equalto', 'completada')|list|length }}
                                         </h4>
-                                        <small>Citas Completadas</small>
+                                        <small>Completadas</small>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <div class="card bg-light">
                                     <div class="card-body">
                                         <h4 class="text-warning">
-                                            {{ current_user.citas|selectattr('estado', 'equalto', 'programada')|list|length }}
+                                            {{ current_user.medico.citas|selectattr('estado', 'equalto', 'programada')|list|length }}
                                         </h4>
-                                        <small>Citas Programadas</small>
+                                        <small>Programadas</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h4 class="text-danger">
+                                            {{ current_user.medico.citas|selectattr('estado', 'equalto', 'cancelada')|list|length }}
+                                        </h4>
+                                        <small>Canceladas</small>
                                     </div>
                                 </div>
                             </div>

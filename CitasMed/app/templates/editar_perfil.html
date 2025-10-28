@@ -40,10 +40,18 @@
                             <input type="text" class="form-control" name="username" 
                                    value="{{ current_user.username }}" required>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email:</label>
-                            <input type="email" class="form-control" name="email" 
-                                   value="{{ current_user.email }}" required>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Correo Electrónico (Gmail):</label>
+                            <input type="email" class="form-control" name="email" id="email" 
+                                   value="{{ current_user.email }}"
+                                   placeholder="tucuenta@gmail.com">
+                            <div id="email-feedback" class="form-text">
+                                {% if current_user.email %}
+                                    ✅ Correo actual: {{ current_user.email }}
+                                {% else %}
+                                    📧 Debes ingresar tu correo Gmail original, de paso verifica si coincide, caso contrario no tendrás notificaciones.
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
@@ -86,6 +94,7 @@
                             <option value="sms" {% if current_user.metodo_contacto_preferido == 'sms' %}selected{% endif %}>💬 SMS</option>
                         </select>
                         <div class="form-text">Cómo prefieres recibir recordatorios de tus citas</div>
+                        <div class="form-text">SMS próximamente disponible</div>
                     </div>
 
                     <!-- Información Personal -->
@@ -170,27 +179,90 @@
 </div>
 
 <script>
-// Actualizar visualización del teléfono en tiempo real
 document.addEventListener('DOMContentLoaded', function() {
-    const codigoPais = document.getElementById('codigo_pais');
-    const inputTelefono = document.querySelector('input[name="telefono"]');
-    
-    function actualizarEjemplo() {
-        const ejemplo = document.getElementById('ejemplo-telefono');
-        if (!ejemplo) return;
+    const emailInput = document.getElementById('email');
+    const emailFeedback = document.getElementById('email-feedback');
+    const emailOriginal = "{{ current_user.email }}";
+    let timeoutId;
+
+    // Validar solo cuando el usuario modifique el email
+    emailInput.addEventListener('input', function() {
+        clearTimeout(timeoutId);
         
-        if (inputTelefono.value) {
-            ejemplo.textContent = `Teléfono completo: +${codigoPais.value}${inputTelefono.value}`;
-            ejemplo.className = 'form-text text-success fw-bold';
-        } else {
-            ejemplo.textContent = 'Ejemplo: 987654321 (se guardará como +51987654321)';
-            ejemplo.className = 'form-text';
+        // Si el email no ha cambiado, no validar
+        if (emailInput.value === emailOriginal) {
+            emailFeedback.innerHTML = '✅ Correo actual: ' + emailOriginal;
+            emailFeedback.className = 'form-text text-success';
+            emailInput.classList.remove('is-invalid', 'is-valid');
+            return;
         }
+        
+        timeoutId = setTimeout(validarEmail, 800);
+    });
+
+    emailInput.addEventListener('blur', function() {
+        if (emailInput.value === emailOriginal) {
+            emailFeedback.innerHTML = '✅ Correo actual: ' + emailOriginal;
+            emailFeedback.className = 'form-text text-success';
+            return;
+        }
+        validarEmail();
+    });
+
+    function validarEmail() {
+        const email = emailInput.value.trim();
+        
+        // Si es el mismo email, no validar
+        if (email === emailOriginal) {
+            emailFeedback.innerHTML = '✅ Correo actual: ' + emailOriginal;
+            emailFeedback.className = 'form-text text-success';
+            emailInput.classList.remove('is-invalid');
+            emailInput.classList.add('is-valid');
+            return;
+        }
+
+        // Si está vacío, mostrar mensaje neutral
+        if (!email) {
+            emailFeedback.innerHTML = '📧 Ingresa tu cuenta Gmail para notificaciones';
+            emailFeedback.className = 'form-text';
+            emailInput.classList.remove('is-valid', 'is-invalid');
+            return;
+        }
+
+        // Mostrar "verificando..."
+        emailFeedback.innerHTML = '🔍 Verificando nuevo correo...';
+        emailFeedback.className = 'form-text text-warning';
+
+        // Llamar al backend para validar el NUEVO email
+        fetch('/validar-email-editar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                email: email,
+                email_original: emailOriginal 
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valido) {
+                emailFeedback.innerHTML = data.mensaje;
+                emailFeedback.className = 'form-text text-success';
+                emailInput.classList.remove('is-invalid');
+                emailInput.classList.add('is-valid');
+            } else {
+                emailFeedback.innerHTML = data.mensaje;
+                emailFeedback.className = 'form-text text-danger';
+                emailInput.classList.remove('is-valid');
+                emailInput.classList.add('is-invalid');
+            }
+        })
+        .catch(error => {
+            emailFeedback.innerHTML = '⚠️ Error de conexión';
+            emailFeedback.className = 'form-text text-warning';
+        });
     }
-    
-    codigoPais.addEventListener('change', actualizarEjemplo);
-    inputTelefono.addEventListener('input', actualizarEjemplo);
-    actualizarEjemplo();
 });
 </script>
 {% endblock %}

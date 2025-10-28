@@ -14,9 +14,14 @@
                             <input type="text" class="form-control" name="username" id="username" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Correo Electrónico:</label>
-                            <input type="email" class="form-control" name="email" id="email" required>
-                        </div>
+    <label for="email" class="form-label">Correo Electrónico (Gmail):</label>
+    <input type="email" class="form-control" name="email" id="email" 
+           required
+           placeholder="tucuenta@gmail.com">
+    <div id="email-feedback" class="form-text">
+        📧 debe ingresar su correo Gmail original de paso verifique si coincide, caso contrario no tendra notificaciones!
+    </div>
+</div>
                     </div>
                     <!-- NUEVO: Campos de teléfono -->
 <div class="row">
@@ -78,3 +83,64 @@
     });
 </script>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailInput = document.getElementById('email');
+    const emailFeedback = document.getElementById('email-feedback');
+    let timeoutId;
+
+    emailInput.addEventListener('input', function() {
+        // Esperar 500ms después de que el usuario deje de escribir
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(validarEmail, 500);
+    });
+
+    emailInput.addEventListener('blur', function() {
+        validarEmail();
+    });
+
+function validarEmail() {
+    const email = emailInput.value.trim();
+    
+    if (!email) {
+        emailFeedback.innerHTML = '📧 debe ingresar su correo Gmail original de paso verifique si coincide, caso contrario no tendra notificaciones!';
+        emailFeedback.className = 'form-text';
+        emailInput.classList.remove('is-valid', 'is-invalid');
+        return;
+    }
+
+    // Mostrar "verificando..." inmediatamente
+    emailFeedback.innerHTML = '🔍 Verificando formato Gmail...';
+    emailFeedback.className = 'form-text text-warning';
+    emailInput.classList.remove('is-valid', 'is-invalid');
+
+    // Llamar al backend
+    fetch('/validar-email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.valido) {
+            emailFeedback.innerHTML = data.mensaje;
+            emailFeedback.className = 'form-text text-success fw-bold';
+            emailInput.classList.remove('is-invalid');
+            emailInput.classList.add('is-valid');
+        } else {
+            emailFeedback.innerHTML = data.mensaje;
+            emailFeedback.className = 'form-text text-danger';
+            emailInput.classList.remove('is-valid');
+            emailInput.classList.add('is-invalid');
+        }
+    })
+    .catch(error => {
+        emailFeedback.innerHTML = '⚠️ Error de conexión. Intenta nuevamente.';
+        emailFeedback.className = 'form-text text-warning';
+    });
+}
+});
+</script>

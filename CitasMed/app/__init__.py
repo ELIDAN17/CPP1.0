@@ -12,7 +12,7 @@ from flask_mail import Mail
 db = SQLAlchemy()
 login_manager = LoginManager() # Crear instancia
 login_manager.login_view = 'main.login' # A qué página redirigir si no se ha logueado
-
+login_manager.login_message_category = 'info' # Categoría de mensaje
 mail = Mail()
 
 def create_app(config_class=Config):

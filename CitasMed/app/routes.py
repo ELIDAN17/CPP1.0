@@ -32,9 +32,40 @@ def registro():
     if request.method == 'POST':
         # Obtenemos los datos del formulario
         username = request.form.get('username')
-        email = request.form.get('email')
+        email = request.form.get('email').strip().lower()  # 🔥 Normalizar email
         password = request.form.get('password')
         rol = request.form.get('rol')
+
+        # 🔥🔥🔥 VALIDACIÓN GMAIL COMPLETA - REEMPLAZA TU CÓDIGO ACTUAL
+        if not email.endswith('@gmail.com'):
+            flash('Solo se permiten correos de Gmail (@gmail.com) para las notificaciones.', 'danger')
+            return redirect(url_for('main.registro'))
+
+        # 🔥 NUEVO: Validación estricta del usuario Gmail
+        usuario_gmail = email.split('@')[0]
+        
+        # Validar longitud
+        if len(usuario_gmail) < 6:
+            flash('El usuario de Gmail debe tener al menos 6 caracteres.', 'danger')
+            return redirect(url_for('main.registro'))
+        
+        if len(usuario_gmail) > 30:
+            flash('El usuario de Gmail no puede tener más de 30 caracteres.', 'danger')
+            return redirect(url_for('main.registro'))
+        
+        # Validar caracteres permitidos
+        if not re.match(r'^[a-z0-9.]+$', usuario_gmail):
+            flash('Solo se permiten letras, números y puntos en el usuario Gmail.', 'danger')
+            return redirect(url_for('main.registro'))
+        
+        # Validar puntos
+        if usuario_gmail.startswith('.') or usuario_gmail.endswith('.'):
+            flash('El usuario Gmail no puede empezar ni terminar con punto.', 'danger')
+            return redirect(url_for('main.registro'))
+        
+        if '..' in usuario_gmail:
+            flash('No se permiten puntos consecutivos en el usuario Gmail.', 'danger')
+            return redirect(url_for('main.registro'))
 
         # NUEVO: Obtener datos de teléfono
         codigo_pais = request.form.get('codigo_pais', '+51')  # Perú por defecto
@@ -49,6 +80,12 @@ def registro():
         else:
             telefono_completo = None
 
+        # 🔥 VERIFICAR SI EMAIL YA EXISTE - AGREGAR ESTO TAMBIÉN
+        usuario_existente = Usuario.query.filter_by(email=email).first()
+        if usuario_existente:
+            flash('Este correo electrónico ya está registrado.', 'danger')
+            return redirect(url_for('main.registro'))
+
         # Crear usuario con teléfono
         nuevo_usuario = Usuario(
             username=username,
@@ -58,7 +95,7 @@ def registro():
         )
 
         # Creamos una nueva instancia del usuario
-        nuevo_usuario = Usuario(username=username, email=email, rol=rol)
+       #nuevo_usuario = Usuario(username=username, email=email, rol=rol)
         nuevo_usuario.set_password(password) # Usamos el método seguro
 
         # --- LÓGICA DE VERIFICACIÓN ---
@@ -80,6 +117,185 @@ def registro():
 
     # Si es GET, solo mostramos el formulario
     return render_template('registro.html')
+
+@main.route('/verificar_usuarios')
+@login_required  
+def verificar_usuarios():
+    if current_user.rol != 'admin':
+        return "Solo para admin"
+    
+    usuarios = Usuario.query.all()
+    html = "<h1>USUARIOS EN BASE DE DATOS</h1>"
+    
+    for usuario in usuarios:
+        html += f"""
+        <div style='border: 2px solid #333; margin: 10px; padding: 10px;'>
+            <h3>ID: {usuario.id} - {usuario.username}</h3>
+            <p>Email: {usuario.email}</p>
+            <p>Rol: <strong>{usuario.rol}</strong></p>
+            <p>Estado: <strong>{usuario.estado_verificacion}</strong></p>
+            <p>Teléfono: {usuario.telefono}</p>
+        </div>
+        """
+    
+    return html
+
+
+@main.route('/validar-email', methods=['POST'])
+def validar_email_tiempo_real():
+    """Valida email en tiempo real SIN dependencias externas"""
+    data = request.get_json()
+    email = data.get('email', '').strip().lower()
+    
+    # 1. Validar que no esté vacío
+    if not email:
+        return jsonify({
+            'valido': False,
+            'mensaje': '📧 Ingresa tu correo Gmail'
+        })
+    
+    # 2. Validar formato Gmail básico
+    if not email.endswith('@gmail.com'):
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ Solo se permiten correos Gmail (@gmail.com)'
+        })
+    
+    # 3. 🔥 VALIDACIÓN ESTRICTA del usuario Gmail
+    usuario = email.split('@')[0]
+    
+    # Reglas de Gmail oficiales:
+    # - Mínimo 6 caracteres, máximo 30
+    # - Solo letras, números y puntos
+    # - No puede empezar o terminar con punto
+    # - No puede tener puntos consecutivos
+    
+    if len(usuario) < 6:
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ El usuario debe tener al menos 6 caracteres'
+        })
+    
+    if len(usuario) > 30:
+        return jsonify({
+            'valido': False, 
+            'mensaje': '❌ El usuario no puede tener más de 30 caracteres'
+        })
+    
+    # Solo caracteres permitidos
+    if not re.match(r'^[a-z0-9.]+$', usuario):
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ Solo letras, números y puntos (sin espacios ni símbolos)'
+        })
+    
+    # No puede empezar/terminar con punto
+    if usuario.startswith('.') or usuario.endswith('.'):
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ El usuario no puede empezar ni terminar con punto'
+        })
+    
+    # No puntos consecutivos
+    if '..' in usuario:
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ No se permiten puntos consecutivos'
+        })
+    
+    # 4. Validar si ya existe en NUESTRA base de datos
+    usuario_existente = Usuario.query.filter_by(email=email).first()
+    if usuario_existente:
+        return jsonify({
+            'valido': False, 
+            'mensaje': '❌ Este correo ya está registrado en nuestro sistema'
+        })
+    
+    # 5. ✅ CORREO VÁLIDO
+    return jsonify({
+        'valido': True,
+        'mensaje': '✅ Correo Gmail válido y disponible'
+    })
+    
+@main.route('/validar-email-editar', methods=['POST'])
+@login_required
+def validar_email_editar():
+    """Valida email al editar perfil (considera email original)"""
+    data = request.get_json()
+    nuevo_email = data.get('email', '').strip().lower()
+    email_original = data.get('email_original', '').strip().lower()
+    
+    # 1. Si es el mismo email, es válido
+    if nuevo_email == email_original:
+        return jsonify({
+            'valido': True,
+            'mensaje': '✅ Correo actual (sin cambios)'
+        })
+    
+    # 2. Validar que no esté vacío
+    if not nuevo_email:
+        return jsonify({
+            'valido': False,
+            'mensaje': '📧 Ingresa tu correo Gmail'
+        })
+    
+    # 3. Validar formato Gmail básico
+    if not nuevo_email.endswith('@gmail.com'):
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ Solo se permiten correos Gmail (@gmail.com)'
+        })
+    
+    # 4. Validación estricta del usuario Gmail
+    usuario = nuevo_email.split('@')[0]
+    
+    if len(usuario) < 6:
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ El usuario debe tener al menos 6 caracteres'
+        })
+    
+    if len(usuario) > 30:
+        return jsonify({
+            'valido': False, 
+            'mensaje': '❌ El usuario no puede tener más de 30 caracteres'
+        })
+    
+    if not re.match(r'^[a-z0-9.]+$', usuario):
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ Solo letras, números y puntos'
+        })
+    
+    if usuario.startswith('.') or usuario.endswith('.'):
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ No puede empezar ni terminar con punto'
+        })
+    
+    if '..' in usuario:
+        return jsonify({
+            'valido': False,
+            'mensaje': '❌ No se permiten puntos consecutivos'
+        })
+    
+    # 5. Validar si ya existe en nuestra BD (excluyendo el usuario actual)
+    usuario_existente = Usuario.query.filter(
+        Usuario.email == nuevo_email,
+        Usuario.id != current_user.id
+    ).first()
+    
+    if usuario_existente:
+        return jsonify({
+            'valido': False, 
+            'mensaje': '❌ Este correo ya está registrado por otro usuario'
+        })
+    
+    # 6. ✅ CORREO VÁLIDO
+    return jsonify({
+        'valido': True,
+        'mensaje': '✅ Nuevo correo Gmail válido y disponible'
+    })
 
 # --- NUEVA RUTA DE LOGIN ---
 @main.route('/login', methods=['GET', 'POST'])
@@ -139,34 +355,76 @@ def admin_panel():
     solicitudes_pendientes = len(medicos_pendientes)
     
     return render_template('admin.html', 
-                         medicos_pendientes=medicos_pendientes,
+                         medicos_pendientes=medicos_pendientes,  
                          total_usuarios=total_usuarios,
                          total_medicos=total_medicos,
                          citas_hoy=citas_hoy,
-                         solicitudes_pendientes=solicitudes_pendientes)
+                         solicitudes_pendientes=solicitudes_pendientes) 
   
 
 # --- RUTA PARA APROBAR MÉDICOS ---
 @main.route('/admin/aprobar/<int:medico_id>')
 @login_required
 def aprobar_medico(medico_id):
-    # Proteger la ruta de nuevo
     if current_user.rol != 'admin':
         flash('Acceso no autorizado.')
         return redirect(url_for('main.dashboard'))
 
     # Buscar al médico por su ID
     medico = Usuario.query.get(medico_id)
-    if medico:
-        # Cambiar su estado y guardar en la BD
+    if medico and medico.rol == 'medico' and medico.estado_verificacion == 'pendiente':
+        # Cambiar su estado a aprobado
         medico.estado_verificacion = 'aprobado'
+        
+        # ✅ VERIFICAR y crear el perfil médico
+        perfil_existente = Medico.query.filter_by(usuario_id=medico.id).first()
+        if not perfil_existente:
+            # Buscar datos de la solicitud
+            solicitud = SolicitudMedico.query.filter_by(usuario_id=medico.id).first()
+            
+            perfil_medico = Medico(
+                usuario_id=medico.id,
+                especialidad=solicitud.especialidad if solicitud else 'General',
+                biografia=solicitud.biografia if solicitud else '',
+                licencia_medica=solicitud.licencia_medica if solicitud else ''
+            )
+            db.session.add(perfil_medico)
+        
         db.session.commit()
         flash(f'El médico {medico.username} ha sido aprobado.')
     else:
-        flash('Médico no encontrado.')
+        flash('Médico no encontrado o ya está aprobado.')
 
-    # Redirigir de vuelta al panel de admin
     return redirect(url_for('main.admin_panel'))
+
+@main.route('/admin/rechazar/<int:medico_id>')
+@login_required
+def rechazar_medico(medico_id):
+    if current_user.rol != 'admin':
+        flash('Acceso no autorizado.')
+        return redirect(url_for('main.dashboard'))
+
+    # Buscar al médico por su ID
+    medico = Usuario.query.get(medico_id)
+    if medico and medico.rol == 'medico' and medico.estado_verificacion == 'pendiente':
+        # Cambiar el rol de vuelta a paciente y estado a aprobado
+        medico.rol = 'paciente'
+        medico.estado_verificacion = 'aprobado'
+        
+        # Marcar la solicitud como rechazada si existe
+        if hasattr(medico, 'solicitud_medico') and medico.solicitud_medico:
+            medico.solicitud_medico.estado = 'rechazada'
+            medico.solicitud_medico.fecha_revision = datetime.now()
+            medico.solicitud_medico.admin_revisor_id = current_user.id
+        
+        db.session.commit()
+        flash(f'La solicitud de {medico.username} ha sido rechazada.')
+    else:
+        flash('Médico no encontrado o ya fue procesado.')
+
+    return redirect(url_for('main.admin_panel'))
+
+
 
 @main.route('/admin/usuarios')
 @login_required
@@ -325,9 +583,8 @@ def perfil_medico(medico_id):
     medico = Medico.query.get_or_404(medico_id)
     
     # --- LÓGICA PARA CALCULAR HORARIOS DISPONIBLES ---
-    
-    # 1. Definir el intervalo de las citas (ej. 30 minutos)
-    intervalo_cita = timedelta(minutes=30)
+    # 1. Definir el intervalo de las citas a 1 HORA
+    intervalo_cita = timedelta(minutes=60)
     
     # 2. Obtener la disponibilidad base del médico y las citas ya agendadas
     disponibilidades = medico.disponibilidades
@@ -338,24 +595,36 @@ def perfil_medico(medico_id):
     
     horarios_libres = []
     
-    # 3. Generar turnos para los próximos 14 días
+    # 3. Solo usar los días específicos que el médico configuró
     hoy = datetime.now().date()
-    for i in range(14):
+    
+    # Crear un conjunto de días únicos que el médico tiene configurados
+    dias_configurados = set()
+    for disponibilidad in disponibilidades:
+        dias_configurados.add(disponibilidad.dia_semana)
+    
+    # Para cada día de la semana configurado, generar horarios para los próximos 7 días
+    for i in range(7):  # Reducido a 7 días para mayor precisión
         dia_actual = hoy + timedelta(days=i)
-        dia_semana_actual = dia_actual.weekday() # Lunes=0, Martes=1, ...
+        dia_semana_actual = dia_actual.weekday()
         
-        for d in disponibilidades:
-            if d.dia_semana == dia_semana_actual:
-                # Generamos los posibles turnos para este día
-                hora_turno = datetime.combine(dia_actual, d.hora_inicio)
-                hora_fin = datetime.combine(dia_actual, d.hora_fin)
-                
-                while hora_turno < hora_fin:
-                    # Si el turno es en el futuro y no está en las horas ocupadas, lo añadimos
-                    if hora_turno > datetime.now() and hora_turno not in horas_ocupadas:
-                        horarios_libres.append(hora_turno)
+        # ✅ SOLO procesar si el médico configuró este día de la semana
+        if dia_semana_actual in dias_configurados:
+            for d in disponibilidades:
+                if d.dia_semana == dia_semana_actual:
+                    # Generamos los posibles turnos para este día
+                    hora_turno = datetime.combine(dia_actual, d.hora_inicio)
+                    hora_fin = datetime.combine(dia_actual, d.hora_fin)
                     
-                    hora_turno += intervalo_cita
+                    while hora_turno < hora_fin:
+                        # Si el turno es en el futuro y no está en las horas ocupadas, lo añadimos
+                        if hora_turno > datetime.now() and hora_turno not in horas_ocupadas:
+                            horarios_libres.append(hora_turno)
+                        
+                        hora_turno += intervalo_cita
+    
+    # Ordenar los horarios por fecha y hora
+    horarios_libres.sort()
     
     # --- FIN DE LA LÓGICA ---
     
@@ -437,6 +706,117 @@ def cancelar_cita(cita_id):
     
     flash('La cita ha sido cancelada con éxito.')
     return redirect(url_for('main.dashboard'))
+
+@main.route('/cita/<int:cita_id>/reprogramar', methods=['GET', 'POST'])
+@login_required
+def reprogramar_cita(cita_id):
+    """Permite al médico reprogramar una cita - VERSIÓN CORREGIDA"""
+    # Verificar que sea médico
+    if current_user.rol != 'medico' or not current_user.medico:
+        flash('Acceso no autorizado. Solo para médicos.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    cita = Cita.query.get_or_404(cita_id)
+    
+    # Verificar que el médico es dueño de esta cita
+    if cita.medico_id != current_user.medico.id:
+        flash('No tienes permiso para esta acción.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    if request.method == 'POST':
+        try:
+            # Obtener la nueva fecha y hora
+            nueva_fecha_str = request.form.get('nueva_fecha')
+            nueva_hora_str = request.form.get('nueva_hora')
+            
+            if not nueva_fecha_str or not nueva_hora_str:
+                flash('Debes seleccionar una fecha y hora válidas.', 'danger')
+                return redirect(url_for('main.reprogramar_cita', cita_id=cita_id))
+            
+            # Combinar fecha y hora
+            nueva_fecha_hora = datetime.strptime(f"{nueva_fecha_str} {nueva_hora_str}", '%Y-%m-%d %H:%M')
+            
+            # Verificar que la nueva fecha sea en el futuro
+            if nueva_fecha_hora <= datetime.now():
+                flash('La nueva fecha debe ser en el futuro.', 'danger')
+                return redirect(url_for('main.reprogramar_cita', cita_id=cita_id))
+            
+            # Guardar fecha original
+            fecha_original = cita.fecha_hora
+            
+            # Actualizar cita
+            cita.fecha_hora = nueva_fecha_hora
+            cita.estado = 'reprogramada'
+            db.session.commit()
+            
+            flash('✅ Cita reprogramada exitosamente.', 'success')
+            return redirect(url_for('main.dashboard'))
+            
+        except ValueError as e:
+            flash('Formato de fecha/hora inválido.', 'danger')
+            return redirect(url_for('main.reprogramar_cita', cita_id=cita_id))
+        except Exception as e:
+            flash('Error al reprogramar la cita.', 'danger')
+            return redirect(url_for('main.reprogramar_cita', cita_id=cita_id))
+    
+    # Si es GET, mostrar formulario de reprogramación
+    # Generar horarios disponibles simples para los próximos 7 días
+    horarios_disponibles = []
+    hoy = datetime.now().date()
+    
+    for i in range(1, 8):  # Próximos 7 días
+        dia_actual = hoy + timedelta(days=i)
+        
+        # Horarios fijos: 9:00, 11:00, 15:00, 17:00
+        horarios_del_dia = [
+            datetime.combine(dia_actual, time(9, 0)),
+            datetime.combine(dia_actual, time(11, 0)),
+            datetime.combine(dia_actual, time(15, 0)),
+            datetime.combine(dia_actual, time(17, 0))
+        ]
+        
+        for horario in horarios_del_dia:
+            # Verificar que no haya citas en ese horario
+            cita_existente = Cita.query.filter(
+                Cita.medico_id == current_user.medico.id,
+                Cita.fecha_hora == horario,
+                Cita.estado.in_(['programada', 'reprogramada'])
+            ).first()
+            
+            if not cita_existente and horario > datetime.now():
+                horarios_disponibles.append(horario)
+    
+    return render_template('reprogramar_cita.html', 
+                         cita=cita, 
+                         horarios_disponibles=horarios_disponibles)
+    
+    
+@main.route('/cita/<int:cita_id>/marcar_no_show', methods=['POST'])
+@login_required
+def marcar_no_show(cita_id):
+    """Marca que el paciente no llegó a la cita - VERSIÓN CORREGIDA"""
+    # Verificar que sea médico
+    if current_user.rol != 'medico' or not current_user.medico:
+        flash('Acceso no autorizado. Solo para médicos.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    cita = Cita.query.get_or_404(cita_id)
+    
+    # Verificar que el médico es dueño de esta cita
+    if cita.medico_id != current_user.medico.id:
+        flash('No tienes permiso para esta acción.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    
+    try:
+        # Marcar como "no show" (paciente no llegó)
+        cita.estado = 'no_show'
+        db.session.commit()
+        flash('✅ Cita marcada como "paciente no llegó".', 'warning')
+    except Exception as e:
+        flash('Error al actualizar la cita.', 'danger')
+    
+    return redirect(url_for('main.dashboard'))
+
 
 
 @main.route('/medico/perfil', methods=['GET', 'POST'])
@@ -599,28 +979,47 @@ def obtener_mensajes(cita_id):
     
     return jsonify({'mensajes': mensajes_data})
 
-# Agregar en routes.py
 @main.route('/cita/<int:cita_id>/completar')
 @login_required
 def completar_cita(cita_id):
-    if current_user.rol != 'medico':
-        flash('Solo los médicos pueden completar citas.')
-        return redirect(url_for('main.dashboard'))
+    """Marca una cita como completada - VERSIÓN MEJORADA"""
+    try:
+        # Verificar que sea médico
+        if current_user.rol != 'medico' or not current_user.medico:
+            flash('Acceso no autorizado. Solo para médicos.', 'danger')
+            return redirect(url_for('main.dashboard'))
+        
+        # Buscar la cita
+        cita = Cita.query.get_or_404(cita_id)
+        
+        # Verificar permisos
+        if cita.medico_id != current_user.medico.id:
+            flash('No tienes permiso para esta acción.', 'danger')
+            return redirect(url_for('main.dashboard'))
+        
+        # Validar estado actual
+        if cita.estado not in ['programada', 'reprogramada']:
+            flash(f'No se puede completar una cita en estado: {cita.estado}', 'warning')
+            return redirect(url_for('main.dashboard'))
+        
+        # Verificar que la cita ya pasó (opcional)
+        if cita.fecha_hora > datetime.now():
+            flash('⚠️ Esta cita aún no ha llegado. ¿Estás seguro de completarla?', 'warning')
+            # Podrías agregar confirmación adicional aquí
+        
+        # Cambiar estado
+        cita.estado = 'completada'
+        db.session.commit()
+        
+        flash('✅ Cita marcada como completada correctamente.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error completando cita: {e}")
+        flash('❌ Error al completar la cita.', 'danger')
     
-    cita = Cita.query.get_or_404(cita_id)
-    
-    # Verificar que el médico es el dueño de esta cita
-    if cita.medico_id != current_user.medico.id:
-        flash('No tienes permiso para esta acción.')
-        return redirect(url_for('main.dashboard'))
-    
-    cita.estado = 'completada'
-    db.session.commit()
-    
-    flash('Cita marcada como completada.')
     return redirect(url_for('main.dashboard'))
 
-# Agregar en routes.py - Funcionalidades médicas avanzadas
 
 @main.route('/cita/<int:cita_id>/historial', methods=['GET', 'POST'])
 @login_required
@@ -679,6 +1078,8 @@ def ver_historial_paciente(paciente_id):
     return render_template('historial_completo.html', 
                          paciente=paciente, 
                          historiales=historiales)
+    
+
 
 @main.route('/cita/<int:cita_id>/iniciar_consulta')
 @login_required
@@ -704,16 +1105,55 @@ def iniciar_consulta_virtual(cita_id):
 @login_required
 def editar_perfil():
     if request.method == 'POST':
+        # Obtener el nuevo email del formulario
+        nuevo_email = request.form.get('email').strip().lower()
+        
+        # 🔥 SOLO validar si el email CAMBIÓ
+        if nuevo_email != current_user.email:
+            # Validar que sea Gmail
+            if not nuevo_email.endswith('@gmail.com'):
+                flash('Solo se permiten correos de Gmail (@gmail.com) para las notificaciones.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+            
+            # 🔥 Validación estricta del usuario Gmail (solo si cambió)
+            usuario_gmail = nuevo_email.split('@')[0]
+            
+            if len(usuario_gmail) < 6:
+                flash('El usuario de Gmail debe tener al menos 6 caracteres.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+            
+            if len(usuario_gmail) > 30:
+                flash('El usuario de Gmail no puede tener más de 30 caracteres.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+            
+            if not re.match(r'^[a-z0-9.]+$', usuario_gmail):
+                flash('Solo se permiten letras, números y puntos en el usuario Gmail.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+            
+            if usuario_gmail.startswith('.') or usuario_gmail.endswith('.'):
+                flash('El usuario Gmail no puede empezar ni terminar con punto.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+            
+            if '..' in usuario_gmail:
+                flash('No se permiten puntos consecutivos en el usuario Gmail.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+            
+            # 🔥 Validar si el NUEVO email ya existe (excluyendo el usuario actual)
+            usuario_existente = Usuario.query.filter(
+                Usuario.email == nuevo_email,
+                Usuario.id != current_user.id  # Excluir al usuario actual
+            ).first()
+            
+            if usuario_existente:
+                flash('Este correo electrónico ya está registrado por otro usuario.', 'danger')
+                return redirect(url_for('main.editar_perfil'))
+
         # Campos para TODOS los usuarios
         current_user.username = request.form.get('username')
-        current_user.email = request.form.get('email')
+        current_user.email = nuevo_email  # Usar el email validado
         current_user.metodo_contacto_preferido = request.form.get('metodo_contacto', 'email')
         current_user.fecha_nacimiento = request.form.get('fecha_nacimiento') or None
         current_user.genero = request.form.get('genero') or None
-        
-        # Biografía y foto para TODOS (nuevos campos que necesitarías agregar al modelo Usuario)
-        # current_user.biografia = request.form.get('biografia', '')  # Si decides agregar este campo
-        # current_user.foto_perfil = request.form.get('foto_perfil', '')  # Si decides agregar este campo
         
         # Teléfono
         codigo_pais = request.form.get('codigo_pais', '51')
@@ -748,41 +1188,59 @@ def solicitar_medico():
         return redirect(url_for('main.dashboard'))
     
     # Verificar si ya tiene solicitud pendiente
-    if current_user.solicitud_medico and current_user.solicitud_medico.estado == 'pendiente':
+    solicitud_existente = SolicitudMedico.query.filter_by(usuario_id=current_user.id, estado='pendiente').first()
+    if solicitud_existente:
         flash('Ya tienes una solicitud médica pendiente de revisión.', 'info')
         return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
-        # Obtener datos del formulario
-        especialidad = request.form.get('especialidad')
-        licencia_medica = request.form.get('licencia_medica')
-        institucion = request.form.get('institucion')
-        experiencia_anos = request.form.get('experiencia_anos')
-        biografia = request.form.get('biografia')
-        url_licencia = request.form.get('url_licencia')
-        url_identidad = request.form.get('url_identidad')
-        url_cv = request.form.get('url_cv')
-        
-        # Crear nueva solicitud
-        nueva_solicitud = SolicitudMedico(
-            usuario_id=current_user.id,
-            especialidad=especialidad,
-            licencia_medica=licencia_medica,
-            institucion=institucion,
-            experiencia_anos=experiencia_anos,
-            biografia=biografia,
-            url_licencia=url_licencia,
-            url_identidad=url_identidad,
-            url_cv=url_cv
-        )
-        
-        db.session.add(nueva_solicitud)
-        db.session.commit()
-        
-        flash('¡Solicitud enviada! Será revisada por nuestro equipo en hasta 48 horas.', 'success')
-        return redirect(url_for('main.dashboard'))
+        try:
+            # Obtener datos del formulario
+            especialidad = request.form.get('especialidad')
+            licencia_medica = request.form.get('licencia_medica')
+            institucion = request.form.get('institucion')
+            experiencia_anos = request.form.get('experiencia_anos')
+            biografia = request.form.get('biografia')
+            url_licencia = request.form.get('url_licencia')
+            url_identidad = request.form.get('url_identidad')
+            url_cv = request.form.get('url_cv')
+            
+            # ✅ SOLUCIÓN: Obtener el objeto REAL de la base de datos
+            usuario_db = Usuario.query.get(current_user.id)
+            
+            # ✅ CAMBIAR ROL en la base de datos
+            usuario_db.rol = 'medico'
+            usuario_db.estado_verificacion = 'pendiente'
+            
+            # Crear solicitud
+            nueva_solicitud = SolicitudMedico(
+                usuario_id=usuario_db.id,
+                especialidad=especialidad,
+                licencia_medica=licencia_medica,
+                institucion=institucion,
+                experiencia_anos=experiencia_anos,
+                biografia=biografia,
+                url_licencia=url_licencia,
+                url_identidad=url_identidad,
+                url_cv=url_cv
+            )
+            
+            db.session.add(nueva_solicitud)
+            db.session.commit()
+            
+            # ✅ ACTUALIZAR la sesión del usuario
+            login_user(usuario_db)
+            
+            flash('¡Solicitud enviada correctamente! Será revisada por nuestro equipo.', 'success')
+            return redirect(url_for('main.dashboard'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al enviar solicitud: {str(e)}', 'danger')
+            return redirect(url_for('main.solicitar_medico'))
     
     return render_template('solicitud_medico.html')
+
 
 
 # Agregar en routes.py
