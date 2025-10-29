@@ -7,7 +7,7 @@
       "name": "Debug C++",
       "program": "${workspaceFolder}/bin/main",
       "args": [],
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}"
     },
     {
       "name": "Debug Windows",
@@ -67,8 +67,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Kira/Uni/projetcs/trabalo",
-      "program": "c:/Users/Kira/Uni/projetcs/trabalo/build/Debug/outDebug",
+      "cwd": "c:/Users/Kira/Uni/projetcs/trabalo/DBP",
+      "program": "c:/Users/Kira/Uni/projetcs/trabalo/DBP/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

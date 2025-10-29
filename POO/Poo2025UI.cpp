@@ -1,87 +1,151 @@
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <iomanip>
-using namespace std;
-#include <cmath>
-#include <stdexcept>
-#include <vector>
-#include <memory>
-#include <numeric>
+#include <iostream>  // Para operaciones de entrada y salida (cout)
+#include <string>    // Para usar cadenas
+#include <sstream>   // Para construir cadenas de texto con datos formateados
+#include <iomanip>   // Para formatear la salida numérica (setprecision)
+using namespace std; // Usar el espacio de nombres estándar para evitar escribir std::
+#include <stdexcept> // Importa la biblioteca para usar excepciones estándar
+#include <vector>    // Para usar std::vector (contenedor de hijos)
+#include <memory>    // Para usar std::unique_ptr (gestión de memoria segura)
 #include <algorithm>
+#include <memory> // Para usar unique_ptr
 
-// 1. Receptor (Receiver): El objeto que realiza la acción real
+class Observador;
+class Sujeto
+{
+public:
+    virtual void registrar(Observador *o) = 0;
+    virtual void notificar(const string &mensaje) = 0;
+    virtual ~Sujeto() = default;
+};
+
+class Observador
+{
+public:
+    virtual void actualizar(const string &mensaje) = 0;
+    virtual ~Observador() = default;
+};
+class SujetoConcreto : public Sujeto
+{
+private:
+    vector<Observador *> obs;
+
+public:
+    void registrar(Observador *o) override
+    {
+        obs.push_back(o);
+        cout << "Sistema: Observador registrado." << endl;
+    }
+    void notificar(const string &mensaje) override
+    {
+        cout << "\n--- Sujeto Notificando: " << mensaje << " ---" << endl;
+        for (Observador *o : obs)
+        {
+            o->actualizar(mensaje);
+        }
+    }
+};
+class ObservadorConcreto : public Observador
+{
+public:
+    void actualizar(const string &mensaje) override
+    {
+        cout << "Notificado: " << mensaje << endl;
+    }
+};
+
+int main()
+{
+    SujetoConcreto *s = new SujetoConcreto();
+    ObservadorConcreto *o1 = new ObservadorConcreto();
+    ObservadorConcreto *o2 = new ObservadorConcreto();
+    s->registrar(o1);
+    s->registrar(o2);
+    s->notificar("Se actualizó el sistema.");
+    delete s;
+    delete o1;
+    delete o2;
+    return 0;
+}
+
+/*
+// Patron  command  editor de texto
+// 1. (Receiver): Objeto que realiza la acción real
 class EditorDeTexto
 {
 private:
     string contenido;
-
 public:
     EditorDeTexto() : contenido("") {}
     void guardar(const string &nuevo_contenido)
     {
         contenido = nuevo_contenido;
-        // Muestra solo los primeros 20 caracteres
-        cout << "Editor: Contenido guardado: '" << contenido.substr(0, 20) << (contenido.length() > 20 ? "..." : "") << "'" << endl;
+        cout << "Editor: Contenido guardado." << endl;
     }
     void cargar(const string &contenido_anterior)
     {
-        contenido = contenido_anterior;
-        cout << "Editor: Contenido deshecho. Estado actual: '" << contenido.substr(0, 20) << (contenido.length() > 20 ? "..." : "") << "'" << endl;
+        contenido = contenido_anterior; // Carga el estado anterior (función de Deshacer)
+        cout << "Editor: Contenido deshecho..." << endl;
     }
+
     string getContenido() const
     {
-        return contenido;
+        return contenido; // Devuelve el estado actual (usado para capturar el estado anterior)
     }
 };
+
 // 2. Interfaz Command
 class Comando
 {
 public:
-    virtual void ejecutar() = 0;
-    virtual void deshacer() = 0;
+    virtual void ejecutar() = 0; // Ejecuta la acción
+    virtual void deshacer() = 0; // Revierte la acción
     virtual ~Comando() = default;
 };
+
 // 3. Comando Concreto: Guardar
 class GuardarCommand : public Comando
 {
 private:
     EditorDeTexto *editor;
     string nuevo_contenido;
-    string contenido_anterior; // Almacena el estado para el Deshacer
+    string contenido_anterior; // Estado necesario para el Deshacer
+
 public:
     GuardarCommand(EditorDeTexto *e, const string &nuevo)
-        : editor(e), nuevo_contenido(nuevo), contenido_anterior(e->getContenido()) {}
+        : editor(e), nuevo_contenido(nuevo), contenido_anterior(e->getContenido()) {} // Captura el estado ANTES de ejecutar
+
     void ejecutar() override
     {
-        editor->guardar(nuevo_contenido);
+        editor->guardar(nuevo_contenido); // Llama a la acción en el Receptor
     }
+
     void deshacer() override
     {
-        editor->cargar(contenido_anterior);
+        editor->cargar(contenido_anterior); // Revierte usando el estado guardado
     }
 };
-// 4. Invocador: Almacena el historial de comandos
+
+// 4. Invocador: Almacena el historial y gestiona la ejecución
 class Invocador
 {
 private:
-    // Usa unique_ptr para gestionar la memoria de los comandos ejecutados
-    vector<unique_ptr<Comando>> historial;
+    vector<unique_ptr<Comando>> historial; // Lista de comandos ejecutados (historial)
 
 public:
     void ejecutarComando(Comando *comando)
     {
         cout << "\nEjecutando comando..." << endl;
         comando->ejecutar();
-        historial.push_back(unique_ptr<Comando>(comando));
+        historial.push_back(unique_ptr<Comando>(comando)); // Añade el comando al historial para posible deshacer
     }
+
     void deshacerUltimo()
     {
         if (!historial.empty())
         {
             cout << "\nDeshaciendo comando..." << endl;
-            historial.back()->deshacer(); // Deshace la última acción
-            historial.pop_back();         // Quita el comando del historial
+            historial.back()->deshacer();
+            historial.pop_back(); // Elimina el comando que acaba de ser deshecho
         }
         else
         {
@@ -89,6 +153,7 @@ public:
         }
     }
 };
+// Función de demostración para el patrón Command
 int main()
 {
     cout << "\n--- DEMOSTRACIÓN DEL PATRÓN COMMAND ---" << endl;
@@ -107,73 +172,65 @@ int main()
     // Intento de deshacer con historial vacío
     invocador.deshacerUltimo();
     return 0;
-}
+}*/
 
 /*
+// Patron strategy Algor order
 // 1. Interfaz de Estrategia
 class EstrategiaOrdenamiento
 {
 public:
-    virtual void ordenar(vector<int> &data) = 0;
+    virtual void ordenar(vector<int> &data) = 0; // Interfaz común para todos los algoritmos
     virtual ~EstrategiaOrdenamiento() = default;
 };
-// 2. Estrategia Concreta: Ordenamiento Burbuja
+
+// 2. Estrategia Concreta: Burbuja
 class OrdenamientoBurbuja : public EstrategiaOrdenamiento
 {
 public:
     void ordenar(vector<int> &data) override
     {
-        int n = data.size();
-        for (int i = 0; i < n - 1; ++i)
-        {
-            for (int j = 0; j < n - i - 1; ++j)
-            {
-                if (data[j] > data[j + 1])
-                {
-                    swap(data[j], data[j + 1]);
-                }
-            }
-        }
+        // ... (Implementación de Burbuja)
         cout << " -> Ordenado con Burbuja." << endl;
     }
 };
-// 2. Estrategia Concreta: Ordenamiento Quicksort
+
+// 2. Estrategia Concreta: Quicksort
 class OrdenamientoQuicksort : public EstrategiaOrdenamiento
 {
 public:
     void ordenar(vector<int> &data) override
     {
-        // Usa la implementación optimizada de la STL (típicamente Quicksort o Introsort)
-        sort(data.begin(), data.end());
+        sort(data.begin(), data.end()); // Uso de std::sort (algoritmo eficiente)
         cout << " -> Ordenado con Quicksort (std::sort)." << endl;
     }
 };
+
 // 3. Contexto
 class Contexto
 {
 private:
-    // Puntero a la estrategia actual
-    unique_ptr<EstrategiaOrdenamiento> estrategia;
+    unique_ptr<EstrategiaOrdenamiento> estrategia; // Referencia a la estrategia actual (único dueño)
 
 public:
-    // El Contexto ahora gestiona la memoria de la Estrategia (opcional pero más seguro)
+    // Constructor que inicializa el Contexto con una estrategia inicial
     Contexto(unique_ptr<EstrategiaOrdenamiento> e) : estrategia(move(e)) {}
+
     void setEstrategia(unique_ptr<EstrategiaOrdenamiento> e)
     {
-        estrategia = move(e);
+        estrategia = move(e); // Permite cambiar el algoritmo en tiempo de ejecución
     }
+
     void ejecutarOrdenamiento(vector<int> data)
-    { // Pasa una copia de los datos
+    {
         cout << "Datos iniciales: ";
         for (int val : data)
             cout << val << " ";
-        estrategia->ordenar(data);
-        cout << "Resultado final: ";
-        for (int val : data)
-            cout << val << " ";
-        cout << endl;
+
+        estrategia->ordenar(data); // El Contexto delega el trabajo a la estrategia actual
     }
 };
+// Función de demostración para el patrón Strategy
 int main()
 {
     cout << "\n--- DEMOSTRACIÓN DEL PATRÓN STRATEGY ---" << endl;
@@ -189,46 +246,50 @@ int main()
 }*/
 
 /*
-// Patron Observer notChat
-// Declaración anticipada
+// Patron observer notChat
+// Declaración anticipada de la clase Observador para evitar errores de referencia circular
 class Observador;
+
 // 1. Interfaz Sujeto (Observable)
 class Sujeto
 {
 public:
-    virtual void adjuntar(Observador *observador) = 0;
-    virtual void notificar(const string &mensaje) = 0;
+    virtual void adjuntar(Observador *observador) = 0; // Registrar observador
+    virtual void notificar(const string &mensaje) = 0; // Iniciar la notificación
     virtual ~Sujeto() = default;
 };
+
 // 2. Interfaz Observador
 class Observador
 {
 public:
-    virtual void actualizar(const string &mensaje) = 0;
+    virtual void actualizar(const string &mensaje) = 0; // Recibir la actualización del Sujeto
     virtual ~Observador() = default;
 };
+
 // 3. Sujeto Concreto: Sala de Chat
 class SalaDeChat : public Sujeto
 {
 private:
-    // Almacena punteros a los observadores
-    vector<Observador *> observadores;
+    vector<Observador *> observadores; // Lista de observadores registrados
 
 public:
     void adjuntar(Observador *observador) override
     {
-        observadores.push_back(observador);
+        observadores.push_back(observador); // Agrega el puntero del observador al vector
         cout << "Sistema: Nuevo usuario registrado." << endl;
     }
+
     void notificar(const string &mensaje) override
     {
         cout << "\n--- SALA DE CHAT - Nuevo Mensaje: '" << mensaje << "' ---" << endl;
         for (Observador *obs : observadores)
         {
-            obs->actualizar(mensaje);
+            obs->actualizar(mensaje); // Itera y llama al método actualizar() de cada observador
         }
     }
 };
+
 // 4. Observador Concreto: Usuario
 class Usuario : public Observador
 {
@@ -236,12 +297,14 @@ private:
     string nombre;
 
 public:
-    Usuario(const string &n) : nombre(n) {}
+    Usuario(const string &n) : nombre(n) {} // Constructor
+
     void actualizar(const string &mensaje) override
     {
-        cout << "[" << nombre << "]: Nuevo mensaje recibido: '" << mensaje << "'" << endl;
+        cout << "[" << nombre << "]: Nuevo mensaje recibido: '" << mensaje << "'" << endl; // Acción específica al ser notificado
     }
 };
+// Función de demostración para el patrón Observer
 int main()
 {
     cout << "--- DEMOSTRACIÓN DEL PATRÓN OBSERVER ---" << endl;
@@ -264,65 +327,77 @@ int main()
 }*/
 
 /*
-// Composite carpeta y archivos
-// 1. Componente Base
+// patron composite archivos y carpetas
+// 1. Componente Base (Interfaz común para Archivos y Carpetas)
 class ComponenteSistema
 {
 protected:
     string nombre;
-    int tamano; // Tamaño en KB
+    int tamano;
+
 public:
     ComponenteSistema(const string &n, int t) : nombre(n), tamano(t) {}
     virtual ~ComponenteSistema() = default;
-    virtual void mostrar(int nivel_indentacion = 0) const = 0;
-    virtual int obtenerTamanoTotal() const = 0;
-    // Método para Composite (si es una hoja, no hace nada)
-    virtual void agregar(ComponenteSistema *componente) {}
+
+    virtual void mostrar(int nivel_indentacion = 0) const = 0; // Muestra el elemento y su contenido
+    virtual int obtenerTamanoTotal() const = 0;                // Obtiene el tamaño
+
+    virtual void agregar(ComponenteSistema *componente) {} // Método de gestión de hijos (vacío por defecto, solo Compuesto lo implementa)
 };
+
 // 2. Hoja (Archivos)
 class Archivo : public ComponenteSistema
-{
+{ // Es una hoja, no tiene hijos
 public:
     Archivo(const string &n, int t) : ComponenteSistema(n, t) {}
+
     void mostrar(int nivel_indentacion) const override
     {
+        // Muestra el archivo. La función no es recursiva.
         cout << string(nivel_indentacion * 2, ' ') << "📄 " << nombre << " (" << tamano << "KB)" << endl;
     }
+
     int obtenerTamanoTotal() const override
     {
-        return tamano;
+        return tamano; // Devuelve su propio tamaño
     }
 };
+
 // 3. Compuesto (Carpeta)
 class Carpeta : public ComponenteSistema
-{
+{ // Es un compuesto, puede tener hijos
 private:
-    vector<unique_ptr<ComponenteSistema>> hijos;
+    vector<unique_ptr<ComponenteSistema>> hijos; // Contenedor para otros Componentes (Archivos o Carpetas)
 
 public:
     Carpeta(const string &n) : ComponenteSistema(n, 0) {}
+
     void agregar(ComponenteSistema *componente) override
     {
-        hijos.push_back(unique_ptr<ComponenteSistema>(componente));
+        hijos.push_back(unique_ptr<ComponenteSistema>(componente)); // Añade un Componente a la lista de hijos
     }
+
     void mostrar(int nivel_indentacion) const override
     {
+        // Muestra el nombre de la carpeta
         cout << string(nivel_indentacion * 2, ' ') << "📁 " << nombre << " (" << obtenerTamanoTotal() << "KB total)" << endl;
         for (const auto &hijo : hijos)
         {
-            hijo->mostrar(nivel_indentacion + 1);
+            hijo->mostrar(nivel_indentacion + 1); // Llamada recursiva: el Compuesto delega la operación a sus hijos
         }
     }
+
     int obtenerTamanoTotal() const override
     {
         int tamano_hijos = 0;
         for (const auto &hijo : hijos)
         {
-            tamano_hijos += hijo->obtenerTamanoTotal();
+            tamano_hijos += hijo->obtenerTamanoTotal(); // Acumula recursivamente el tamaño de los hijos
         }
         return tamano_hijos;
     }
 };
+// Función de demostración para el patrón Composite
 int main()
 {
     cout << "--- Prueba de Patrón Composite (C++) ---" << endl;
@@ -354,15 +429,16 @@ int main()
 }*/
 
 /*
-// Patron decorator
-// 1. Componente Base (Interfaz de la función matemática)
+// patron decorator validacion matematica
+// 1. Componente Base (Interfaz común para la función matemática)
 class ComponenteMatematico
 {
 public:
-    virtual double calcular(double a, double b) = 0;
+    virtual double calcular(double a, double b) = 0; // Método de operación (el mismo para el Decorator)
     virtual ~ComponenteMatematico() = default;
 };
-// 2. Componente Concreto (Implementación base)
+
+// 2. Componente Concreto (Implementación base sin validaciones extra)
 class Division : public ComponenteMatematico
 {
 public:
@@ -370,40 +446,46 @@ public:
     {
         if (b == 0)
         {
-            throw runtime_error("Error: División por cero.");
+            throw runtime_error("Error: División por cero."); // Verifica el caso de error de la lógica base
         }
-        return a / b;
+        return a / b; // Realiza la operación original
     }
 };
-// 3. Decorator Base
+
+// 3. Decorator Base (Mantiene una referencia al Componente)
 class DecoradorBase : public ComponenteMatematico
 {
 protected:
-    ComponenteMatematico *componente;
+    ComponenteMatematico *componente; // Referencia al objeto envuelto (el Componente que estamos decorando)
 
 public:
+    // Constructor que recibe y almacena el objeto a decorar
     DecoradorBase(ComponenteMatematico *comp) : componente(comp) {}
-    // Delega la operación, manteniendo la interfaz
+
+    // Método por defecto: delega la ejecución al objeto envuelto
     double calcular(double a, double b) override
     {
         return componente->calcular(a, b);
     }
 };
-// 4. Decorator Concreto: Validación de Positivos
+
+// 4. Decorator Concreto: Validación de Positivos (Añade funcionalidad)
 class DecoradorValidacionPositivos : public DecoradorBase
 {
 public:
-    DecoradorValidacionPositivos(ComponenteMatematico *comp) : DecoradorBase(comp) {}
+    DecoradorValidacionPositivos(ComponenteMatematico *comp) : DecoradorBase(comp) {} // Constructor que llama al constructor base
+
     double calcular(double a, double b) override
     {
         if (a <= 0 || b <= 0)
         {
-            throw invalid_argument("Error de Decorator: Los argumentos deben ser positivos.");
+            throw invalid_argument("Error de Decorator: Los argumentos deben ser positivos."); // Lógica añadida por el Decorator (Validación)
         }
-        // Si la validación es correcta, llama a la operación base
+        // Si la validación es correcta, llama al cálculo del objeto envuelto (pasando la prueba)
         return DecoradorBase::calcular(a, b);
     }
 };
+// Función de demostración para el patrón Decorator
 int main()
 {
     cout << "--- Prueba de Patrón Decorator (C++) ---" << endl;
@@ -431,59 +513,63 @@ int main()
 }*/
 
 /*
-// Patron adadpter en c++
+// Patron Adapter conversion de pagos
 // 1. Interfaz Target (Lo que el cliente espera)
 class Pagos
 {
 public:
-    virtual string pagarEnSoles() = 0;
-    virtual ~Pagos() = default;
+    virtual string pagarEnSoles() = 0; // Método que el cliente llama (Target)
+    virtual ~Pagos() = default;        // Destructor virtual por defecto
 };
+
 // 2. Clase a Adaptar (Adaptee)
 class SistemaPagosDolares
 {
 private:
-    double cantidadDolares;
+    double cantidadDolares; // El Adaptee solo entiende dólares
 
 public:
-    SistemaPagosDolares(double dolares) : cantidadDolares(dolares) {}
+    SistemaPagosDolares(double dolares) : cantidadDolares(dolares) {} // Constructor
+
     double getMontoDolares() const
     {
-        return cantidadDolares;
-    }
-    string procesarDolares() const
-    {
-        return "Monto original procesado en USD.";
+        return cantidadDolares; // Devuelve el monto original en dólares
     }
 };
+
 // 3. Adaptador
 class AdaptadorPagos : public Pagos
-{
+{ // Hereda de Pagos (Target)
 private:
-    SistemaPagosDolares *sistemaDolares;
-    const double TIPO_CAMBIO = 3.80; // 1 USD = 3.80 PEN
+    SistemaPagosDolares *sistemaDolares; // Contiene una referencia al Adaptee
+    const double TIPO_CAMBIO = 3.80;     // Constante de conversión
+
 public:
-    AdaptadorPagos(SistemaPagosDolares *adaptee) : sistemaDolares(adaptee) {}
+    AdaptadorPagos(SistemaPagosDolares *adaptee) : sistemaDolares(adaptee) {} // Constructor
+
     string pagarEnSoles() override
-    {
-        double dolares = sistemaDolares->getMontoDolares();
-        double soles = dolares * TIPO_CAMBIO;
-        // Formateo del resultado
+    {                                                       // Implementa el método Target
+        double dolares = sistemaDolares->getMontoDolares(); // Llama al Adaptee
+        double soles = dolares * TIPO_CAMBIO;               // Realiza la conversión (Adaptación)
+
+        // Formatea la salida para mostrar dos decimales
         stringstream ss;
         ss << fixed << setprecision(2) << soles;
+
         cout << "Convirtiendo: " << fixed << setprecision(2) << dolares << " USD * " << TIPO_CAMBIO << "..." << endl;
         return "Pago procesado: S/. " + ss.str() + " (Moneda Nacional).";
     }
 };
+
 int main()
 {
-    cout << "--- Prueba de Patrón Adapter (C++) ---" << endl;
-    double monto_usd = 50.00;
-    // Adaptee
-    SistemaPagosDolares sistema_dolares(monto_usd);
-    // Adaptador (se pasa el puntero del Adaptee)
-    AdaptadorPagos adaptador(&sistema_dolares);
-    // El cliente llama al método Target (pagarEnSoles)
+    cout << "\n--- DEMOSTRACIÓN DEL PATRÓN ADAPTER ---" << endl;
+    double monto_usd = 100.00;
+
+    SistemaPagosDolares sistema_dolares(monto_usd); // Crea el Adaptee
+    AdaptadorPagos adaptador(&sistema_dolares);     // Crea el Adaptador
+
+    // El cliente llama a la interfaz Target esperada
     cout << adaptador.pagarEnSoles() << endl;
     return 0;
 }*/

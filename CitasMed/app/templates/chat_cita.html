@@ -109,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 inputMensaje.value = '';
-                // El mensaje se agregará con la siguiente actualización
             }
         })
         .catch(error => console.error('Error:', error));
@@ -149,8 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error:', error));
     }
     
-    // Actualizar cada 3 segundos
-    setInterval(actualizarMensajes, 3000);
+    setInterval(actualizarMensajes, 5000);
 });
 </script>
 {% endblock %}
