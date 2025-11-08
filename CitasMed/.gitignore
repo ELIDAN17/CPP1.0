@@ -1,0 +1,40 @@
+# .gitignore
+
+# ----------------------------------------------------
+# 1. ARCHIVOS SENSIBLES (CREDENTIALS)
+# ----------------------------------------------------
+# ¡CRUCIAL! Esto evita que tus contraseñas y claves privadas se suban.
+.env
+
+# ----------------------------------------------------
+# 2. CARPETAS DE ENTORNO DE PYTHON
+# ----------------------------------------------------
+# Archivos de caché de Python
+__pycache__/
+
+# Entorno virtual que usa Python (no se necesita en el repositorio)
+venv/
+.venv/
+env/
+
+# ----------------------------------------------------
+# 3. ARCHIVOS DE DEPENDENCIAS Y COMPILACIÓN
+# ----------------------------------------------------
+# Paquetes instalados por pip
+*.egg-info/
+
+# Archivos de caché del IDE/Editor (ej: VS Code)
+.vscode/
+.idea/
+
+# ----------------------------------------------------
+# 4. ARCHIVOS DE BASE DE DATOS LOCAL
+# ----------------------------------------------------
+# Si usas SQLite localmente
+*.db
+
+# ----------------------------------------------------
+# 5. ARCHIVOS ESPECÍFICOS DE AZURE/WEB
+# ----------------------------------------------------
+# Archivos de configuración de Azure que se generan automáticamente
+azure-pipelines.yml
