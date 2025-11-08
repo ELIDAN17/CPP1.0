@@ -1,0 +1,20 @@
+# requirements.txt
+
+# El core de la aplicación web
+Flask
+# Para usar variables de entorno (.env) en desarrollo local
+python-dotenv
+# ORM (Mapeador Objeto-Relacional) de Flask
+Flask-SQLAlchemy
+# Driver de MySQL recomendado para Azure y SSL (sustituye a PyMySQL)
+mysql-connector-python
+# Para manejar las migraciones de la base de datos
+Flask-Migrate
+# Para el scheduler que tienes en config.py
+Flask-APScheduler 
+gunicorn
+# Agrega aquí cualquier otra librería que uses, como:
+Flask-Login
+Flask-Mail
+# requests
+# ...
