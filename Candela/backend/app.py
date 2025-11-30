@@ -6,16 +6,24 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, event
 #import mysql.connector
 import hashlib
+import os
 
 app = Flask(__name__)
 CORS(app)
 
+DATABASE_URL = os.getenv('DATABASE_URL')
+if DATABASE_URL:
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    print("🌐 Conectando a base de datos Azure")
+else:
 # Configuración de XAMPP
-DB_USER = "root"
-DB_PASSWORD = ""
-DB_HOST = "localhost"
-DB_NAME = "candelaria_db"
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+    DB_USER = "root"
+    DB_PASSWORD = ""
+    DB_HOST = "localhost"
+    DB_NAME = "candelaria_db"
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+    print("🖥️ Conectando a base de datos local XAMPP")
+
 
 # Configuracion de postgreSQL
 #DB_USER = "ingeniero_adminJMP"

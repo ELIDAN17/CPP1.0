@@ -81,6 +81,21 @@ int main()
     return 0;
 }*/
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /*
 // Logger monitoreo de excepciones en cpp
 #include <iostream>  // para entrada y salida (cout, cerr)
@@ -92,7 +107,7 @@ int main()
 #include <chrono>    // para operaciones de tiempo en hilos
 using namespace std; // para simplificar el código
 
-// --- 1. EXCEPCIÓN PERSONALIZADA ---
+// EXCEPCIÓN PERSONALIZADA
 // Una clase de excepción que hereda de runtime_error para errores en tiempo de ejecución.
 class DivisionPorCero : public runtime_error
 {
@@ -102,7 +117,7 @@ public:
     // Al heredar, ya tenemos el método .what() que devolverá el string anterior.
 };
 
-// --- 2. CLASE REGISTRO (LOGGER) ---
+// REGISTRO (LOGGER)
 class Registro
 {
 private:
@@ -130,25 +145,21 @@ public:
     {
         // time(0) obtiene la hora actual del sistema.
         time_t ahora = time(0);
-        // ctime(&ahora) convierte el tiempo a un string legible.
-        // Escribe en el archivo: [timestamp] mensaje \n
         archivo << "[" << ctime(&ahora) << "] " << mensaje << endl;
     }
 };
 
-// --- 3. FUNCIÓN PRINCIPAL ---
 // Función que realiza una división y verifica la pre-condición de división por cero (excepciones).
 double dividir(double a, double b)
 {
     // Verificación de la pre-condición: si es cero, se lanza la excepción.
     if (b == 0)
-        // Lanza la excepción personalizada. El flujo normal del programa se detiene.
+        // Lanza la excepción. El flujo normal del programa se detiene.
         throw DivisionPorCero();
     // Retorna el resultado si la operación es segura.
     return a / b;
 }
 
-// --- 4. FUNCIÓN PRINCIPAL (CLIENTE Y MONITOREO) ---
 int main()
 {
     // Instancia el Logger. El constructor abre 'sistema.log'.
@@ -163,14 +174,14 @@ int main()
     {
         // Bloque TRY: Contiene el código que podría lanzar una excepción.
         try
-        {
+        {   
             double resultado = dividir(a, b);
            
             // Si es exitosa, imprime y registra la operación.
             cout << "Resultado de " << a << " / " << b << " = " << resultado << endl;
             log.registrar("División exitosa: " + to_string(a) + "/" + to_string(b) + " = " + to_string(resultado));
         }
-        // Bloque CATCH específico: Atrapa la excepción personalizada 'DivisionPorCero'.
+        // Bloque CATCH específico: 'DivisionPorCero'.
         catch (const DivisionPorCero &ex)
         {
             // Imprime el mensaje de error en la salida de error estándar (cerr).
@@ -178,7 +189,7 @@ int main()
             // Registra el error en el archivo de log.
             log.registrar("Error: " + string(ex.what()));
         }
-        // Bloque CATCH genérico: Atrapa cualquier otra excepción estándar no capturada antes.
+        // Bloque CATCH genérico: Cualquier otra excepción estándar no mencionada antes.
         catch (const exception &ex)
         {
             // Imprime la excepción genérica.
