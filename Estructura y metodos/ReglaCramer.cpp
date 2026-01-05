@@ -1,99 +1,74 @@
 #include <iostream>
-
 using namespace std;
-
-// Definición del tamaño de la matriz (N x N)
-const int N = 3;
-
-// --- Funcion Auxiliar: Determinante 3x3 ---
+const int N = 3; // Tamaño de la matriz 3x3
 double calcularDeterminante(double M[N][N])
 {
-    // a11 * (a22*a33 - a23*a32)
     double det_a11 = M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]);
-
-    // - a12 * (a21*a33 - a23*a31)
     double det_a12 = M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]);
-
-    // + a13 * (a21*a32 - a22*a31)
     double det_a13 = M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]);
-
     return det_a11 - det_a12 + det_a13;
 }
-
-// --- Metodo de la Regla de Cramer ---
 void metodoCramer()
 {
-    // Matriz de coeficientes A (3x3).
-    double A[N][N] = {
-        {2, 1, 1},
-        {1, 3, 2},
-        {3, 2, 4}};
-    // Vector de términos constantes b.
-    double b[N] = {12, 19, 30};
-
-    double det_A;
+    double A_Aumentada[N][N + 1];
+    double A_Coeff[N][N];
+    double b[N];
     double soluciones[N];
-
-    cout << "--- Metodo de la Regla de Cramer (Sistema 3x3) ---" << endl;
-
-    // 1. Calcular el Determinante de la Matriz de Coeficientes A
-    det_A = calcularDeterminante(A);
-
-    cout << "Determinante principal (Det(A)): " << det_A << endl;
-
-    if (det_A == 0)
+    cout << "Ingrese los coeficientes del sistema:" << endl;
+    for (int i = 0; i < N; i++)
     {
-        cout << "\n--- ERROR: Det(A) es cero. El sistema no tiene solucion unica. ---" << endl;
+        cout << "Fila " << i + 1 << ":" << endl;
+        for (int j = 0; j < N; j++)
+        {
+            cout << "  Coeficiente x" << j + 1 << ": ";
+            cin >> A_Aumentada[i][j];
+            A_Coeff[i][j] = A_Aumentada[i][j];
+        }
+        cout << "  Termino independiente (b): ";
+        cin >> A_Aumentada[i][N];
+        b[i] = A_Aumentada[i][N];
+    }
+    double det_principal = calcularDeterminante(A_Coeff);
+    cout << "\nDeterminante principal (Det A): " << det_principal << endl;
+    if (det_principal == 0)
+    {
+        cout << "ERROR: El determinante es cero. El sistema no tiene solucion unica." << endl;
         return;
     }
-
-    // 2. Calcular los Determinantes A_i y las Soluciones x_i
     for (int i = 0; i < N; i++)
-    { // i = 0 para x1, i = 1 para x2, i = 2 para x3
-
-        // Crear la matriz A_i (Copia de A)
-        double A_i[N][N];
+    {
+        double matrizTemporal[N][N];
         for (int r = 0; r < N; r++)
         {
             for (int c = 0; c < N; c++)
             {
-                A_i[r][c] = A[r][c];
+                matrizTemporal[r][c] = A_Coeff[r][c];
             }
         }
-
-        // Reemplazar la columna i de A_i por el vector de constantes b
         for (int r = 0; r < N; r++)
         {
-            A_i[r][i] = b[r];
+            matrizTemporal[r][i] = b[r];
         }
+        double det_auxiliar = calcularDeterminante(matrizTemporal);
+        soluciones[i] = det_auxiliar / det_principal;
 
-        // Calcular el determinante de la matriz modificada
-        double det_A_i = calcularDeterminante(A_i);
-
-        // Calcular la solucion x_i = Det(A_i) / Det(A)
-        soluciones[i] = det_A_i / det_A;
-
-        cout << "Determinante de A" << i + 1 << ": " << det_A_i << endl;
+        cout << "Det A" << i + 1 << " = " << det_auxiliar << endl;
     }
-
-    // 3. Mostrar la Solución Final
-    cout << "\n--- Solucion Final ---" << endl;
-    for (int i = 0; i < N; i++)
-    {
-        cout << "x" << i + 1 << " = " << soluciones[i] << endl;
-    }
+    cout << "\n--- SOLUCION FINAL POR CRAMER ---" << endl;
+    cout << "x1 = " << soluciones[0] << endl;
+    cout << "x2 = " << soluciones[1] << endl;
+    cout << "x3 = " << soluciones[2] << endl;
 }
 
 int main()
 {
-    char continuar_programa;
+    char continuar;
     do
     {
+        cout << "\n=== METODO DE CRAMER (SISTEMA 3x3) ===" << endl;
         metodoCramer();
-        cout << "\n¿Deseas realizar otra operacion? (S/N): ";
-        cin >> continuar_programa;
-    } while (continuar_programa == 'S' || continuar_programa == 's');
-
-    cout << "Programa terminado." << endl;
+        cout << "\n¿Deseas resolver otro sistema? (s/n): ";
+        cin >> continuar;
+    } while (continuar == 's' || continuar == 'S');
     return 0;
 }

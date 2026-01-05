@@ -1,163 +1,78 @@
 #include <iostream>
-
 using namespace std;
-
-// Definición del tamaño de la matriz (N x N)
-const int N = 3;
-
-// Función auxiliar para imprimir la matriz
-void imprimirMatriz(double A[N][N])
+const int N = 3; // Tamaño de la matriz 3x3
+void imprimirMatriz(double M[N][N], const char *nombre)
 {
+    cout << "Matriz " << nombre << ":" << endl;
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
         {
-            cout << A[i][j] << "\t";
+            cout << M[i][j] << "\t";
         }
         cout << endl;
     }
     cout << "----------------------------------" << endl;
 }
-
-// ------------------------------------------------------------------
-// --- 1. SUMA DE MATRICES (A + B) ---
-// ------------------------------------------------------------------
-void sumaMatrices()
+void operacionesMatriciales()
 {
-    double A[N][N] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-    double B[N][N] = {{9, 8, 7}, {6, 5, 4}, {3, 2, 1}};
-    double C[N][N]; // Matriz resultado C = A + B
-
-    cout << "--- 1. Suma de Matrices (3x3) ---" << endl;
-
-    // La suma solo requiere un bucle anidado doble
+    double A[N][N], B[N][N], S[N][N], R[N][N], M[N][N];
+    cout << "--- INGRESO DE MATRIZ A ---" << endl;
+    for (int i = 0; i < N; i++)
+    {
+        cout << "Fila " << i + 1 << ":" << endl;
+        for (int j = 0; j < N; j++)
+        {
+            cout << "  Elemento A" << j + 1 << ": ";
+            cin >> A[i][j];
+        }
+    }
+    cout << "\n--- INGRESO DE MATRIZ B ---" << endl;
+    for (int i = 0; i < N; i++)
+    {
+        cout << "Fila " << i + 1 << ":" << endl;
+        for (int j = 0; j < N; j++)
+        {
+            cout << "  Elemento B" << j + 1 << ": ";
+            cin >> B[i][j];
+        }
+    }
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
         {
-            C[i][j] = A[i][j] + B[i][j];
+            // Suma y Resta
+            S[i][j] = A[i][j] + B[i][j];
+            R[i][j] = A[i][j] - B[i][j];
+            M[i][j] = 0;
         }
     }
-
-    cout << "Matriz A:" << endl;
-    imprimirMatriz(A);
-    cout << "Matriz B:" << endl;
-    imprimirMatriz(B);
-    cout << "Resultado C = A + B:" << endl;
-    imprimirMatriz(C);
-}
-
-// ------------------------------------------------------------------
-// --- 2. TRANSUESTA DE MATRICES (A^T) ---
-// ------------------------------------------------------------------
-void transpuestaMatrices()
-{
-    double A[N][N] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-    double A_T[N][N]; // Matriz resultado A_T
-
-    cout << "--- 2. Transpuesta de Matriz (3x3) ---" << endl;
-
-    // Intercambiar filas por columnas
+    // Multiplicación (Fila x Columna)
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
         {
-            A_T[i][j] = A[j][i];
-        }
-    }
-
-    cout << "Matriz A:" << endl;
-    imprimirMatriz(A);
-    cout << "Resultado A^T (Transpuesta):" << endl;
-    imprimirMatriz(A_T);
-}
-
-// ------------------------------------------------------------------
-// --- 3. MULTIPLICACIÓN DE MATRICES (A * B) ---
-// ------------------------------------------------------------------
-void multiplicacionMatrices()
-{
-    double A[N][N] = {{1, 0, 2}, {0, 3, 0}, {4, 0, 5}};
-    double B[N][N] = {{1, 1, 0}, {0, 2, 1}, {1, 0, 0}};
-    double C[N][N]; // Matriz resultado C = A * B
-
-    cout << "--- 3. Multiplicacion de Matrices (3x3) ---" << endl;
-
-    // Inicializar la matriz resultado a cero
-    for (int i = 0; i < N; i++)
-    {
-        for (int j = 0; j < N; j++)
-        {
-            C[i][j] = 0;
-        }
-    }
-
-    // Triple bucle anidado: i, j, k
-    for (int i = 0; i < N; i++)
-    { // Filas de A
-        for (int j = 0; j < N; j++)
-        { // Columnas de B
             for (int k = 0; k < N; k++)
-            { // Elementos de la fila/columna interna
-                C[i][j] += A[i][k] * B[k][j];
+            {
+                M[i][j] += A[i][k] * B[k][j];
             }
         }
     }
-
-    cout << "Matriz A:" << endl;
-    imprimirMatriz(A);
-    cout << "Matriz B:" << endl;
-    imprimirMatriz(B);
-    cout << "Resultado C = A * B:" << endl;
-    imprimirMatriz(C);
+    cout << "\n======= RESULTADOS DE LAS OPERACIONES =======" << endl;
+    imprimirMatriz(S, "SUMA (A + B)");
+    imprimirMatriz(R, "RESTA (A - B)");
+    imprimirMatriz(M, "MULTIPLICACION (A * B)");
 }
-
-// ------------------------------------------------------------------
-// --- FUNCION PRINCIPAL ---
-// ------------------------------------------------------------------
 int main()
 {
-    char opcion;
-
+    char continuar;
     do
     {
-        cout << "\n--- MENU DE OPERACIONES MATRICIALES (3x3) ---" << endl;
-        cout << "A. Suma de Matrices" << endl;
-        cout << "B. Transpuesta de Matrices" << endl;
-        cout << "C. Multiplicacion de Matrices" << endl;
-        cout << "D. Metodo de Gauss-Jordan (Resuelto anteriormente)" << endl;
-        cout << "X. Salir" << endl;
-        cout << "Seleccione una opcion: ";
-        cin >> opcion;
-
-        switch (opcion)
-        {
-        case 'A':
-        case 'a':
-            sumaMatrices();
-            break;
-        case 'B':
-        case 'b':
-            transpuestaMatrices();
-            break;
-        case 'C':
-        case 'c':
-            multiplicacionMatrices();
-            break;
-        case 'D':
-        case 'd':
-            // La funcion metodoGaussJordan ya está lista y funcional
-            // La incluiremos aqui si el usuario la quiere ver integrada
-            cout << "La funcion de Gauss-Jordan esta lista en el codigo anterior." << endl;
-            break;
-        case 'X':
-        case 'x':
-            cout << "Programa terminado." << endl;
-            break;
-        default:
-            cout << "Opcion invalida." << endl;
-        }
-    } while (opcion != 'X' && opcion != 'x');
-
+        cout << "\n=== OPERACIONES MATRICIALES (SISTEMA 3x3) ===" << endl;
+        operacionesMatriciales();
+        cout << "\n¿Deseas ingresar otras matrices? (s/n): ";
+        cin >> continuar;
+    } while (continuar == 's' || continuar == 'S');
+    cout << "Programa terminado." << endl;
     return 0;
 }

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora Álgebra Lineal - 10 Métodos Explicados</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --text: #1e293b;
+            --accent: #fbbf24;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        .grid-layout {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .matrix-box {
+            text-align: center;
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 2rem;
+        }
+
+        button {
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        #log {
+            background: #0f172a;
+            color: #cbd5e1;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-family: monospace;
+        }
+
+        .step-card {
+            border-bottom: 1px solid #475569;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+        }
+
+        .step-title {
+            color: #38bdf8;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .formula-box {
+            color: var(--accent);
+            background: rgba(251, 191, 36, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+            border-left: 4px solid var(--accent);
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 10px 0;
+            border: 1px solid #475569;
+            background: #1e293b;
+        }
+
+        td {
+            padding: 10px;
+            border: 1px solid #334155;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .pivot {
+            background: #166534 !important;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .changing {
+            background: #7f1d1d !important;
+            color: #f87171;
+        }
+
+        .vector-sep {
+            border-left: 3px double #38bdf8 !important;
+        }
+
+        .final-res {
+            background: #0f172a;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1.3rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>📐 Matrices de Algebra</h1>
+
+        <div class="grid-layout">
+            <div class="matrix-box"><b>Matriz A (Coeficientes)</b>
+                <div class="matrix" id="inputsA">
+                    <input type="number" value="2"> <input type="number" value="-6"> <input type="number" value="-1">
+                    <input type="number" value="-3"> <input type="number" value="-1"> <input type="number" value="7">
+                    <input type="number" value="-8"> <input type="number" value="1"> <input type="number" value="-2">
+                </div>
+            </div>
+            <div class="matrix-box"><b>Vector b (Resultados)</b>
+                <div class="matrix" style="grid-template-columns: 1fr;" id="inputsB">
+                    <input type="number" value="-38"> <input type="number" value="-34"> <input type="number"
+                        value="-20">
+                </div>
+            </div>
+            <div class="matrix-box"><b>Matriz B (Operaciones)</b>
+                <div class="matrix" id="inputsMatB">
+                    <input type="number" value="1"> <input type="number" value="2"> <input type="number" value="3">
+                    <input type="number" value="0"> <input type="number" value="1"> <input type="number" value="4">
+                    <input type="number" value="5"> <input type="number" value="6"> <input type="number" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="ejecutar('gauss')">1. Gauss</button>
+            <button onclick="ejecutar('jordan')">2. Gauss-Jordan</button>
+            <button onclick="ejecutar('lu')">3. LU</button>
+            <button onclick="ejecutar('inversa')">4. Inversa</button>
+            <button onclick="ejecutar('suma')">5. Suma (A+B)</button>
+            <button onclick="ejecutar('resta')">6. Resta (A-B)</button>
+            <button onclick="ejecutar('mult')">7. Multiplicación</button>
+            <button onclick="ejecutar('det')">8. Determinante</button>
+            <button onclick="ejecutar('cramer')">9. Cramer</button>
+            <button onclick="ejecutar('cholesky')">10. Cholesky</button>
+        </div>
+
+        <div id="log">Selecciona un método para ver el análisis matemático...</div>
+    </div>
+
+    <script>
+        const leerM = (id) => {
+            let inputs = document.querySelectorAll(`#${id} input`);
+            let m = [[], [], []];
+            inputs.forEach((inp, i) => m[Math.floor(i / 3)].push(parseFloat(inp.value) || 0));
+            return m;
+        };
+        const leerV = () => Array.from(document.querySelectorAll('#inputsB input')).map(inp => parseFloat(inp.value) || 0);
+        const clonar = (m) => m.map(row => [...row]);
+
+        function logStep(msg, matrix, vector = null, formula = "", pR = -1, pC = -1, tR = -1) {
+            let html = `<div class="step-card"><span class="step-title">→ ${msg}</span>`;
+            if (formula) html += `<div class="formula-box"><b>Operación:</b> ${formula}</div>`;
+            html += `<table>`;
+            matrix.forEach((row, i) => {
+                html += `<tr>`;
+                row.forEach((v, j) => {
+                    let cls = (i === pR && j === pC) ? "pivot" : (i === tR ? "changing" : "");
+                    html += `<td class="${cls}">${v.toFixed(2)}</td>`;
+                });
+                if (vector) {
+                    let vCls = (i === tR) ? "changing" : "";
+                    html += `<td class="vector-sep ${vCls}">${vector[i].toFixed(2)}</td>`;
+                }
+                html += `</tr>`;
+            });
+            document.getElementById('log').innerHTML += html + `</table></div>`;
+        }
+
+        function printFinal(msg) {
+            document.getElementById('log').innerHTML += `<div class="final-res">${msg}</div>`;
+        }
+
+        const metodos = {
+            gauss: (A, b) => {
+                logStep("Inicio: Matriz Aumentada", A, b);
+                for (let i = 0; i < 3; i++) {
+                    for (let k = i + 1; k < 3; k++) {
+                        let f = A[k][i] / A[i][i];
+                        let form = `R${k + 1} = R${k + 1} - (${f.toFixed(2)}) * R${i + 1}`;
+                        for (let j = i; j < 3; j++) A[k][j] -= f * A[i][j];
+                        b[k] -= f * b[i];
+                        logStep(`Eliminando A[${k + 1}][${i + 1}]`, A, b, form, i, i, k);
+                    }
+                }
+                let x = [0, 0, 0];
+                for (let i = 2; i >= 0; i--) {
+                    let s = 0; for (let j = i + 1; j < 3; j++) s += A[i][j] * x[j];
+                    x[i] = (b[i] - s) / A[i][i];
+                }
+                printFinal(`SISTEMA RESUELTO (Gauss): x = ${x[0].toFixed(2)}, y = ${x[1].toFixed(2)}, z = ${x[2].toFixed(2)}`);
+            },
+
+            jordan: (A, b) => {
+                for (let i = 0; i < 3; i++) {
+                    let p = A[i][i];
+                    let formP = `R${i + 1} = R${i + 1} / ${p.toFixed(2)} (Normalizar pivote)`;
+                    for (let j = 0; j < 3; j++) A[i][j] /= p;
+                    b[i] /= p;
+                    logStep(`Paso ${i + 1}: Normalización`, A, b, formP, i, i, i);
+                    for (let k = 0; k < 3; k++) {
+                        if (k !== i) {
+                            let f = A[k][i];
+                            let formE = `R${k + 1} = R${k + 1} - (${f.toFixed(2)}) * R${i + 1}`;
+                            for (let j = 0; j < 3; j++) A[k][j] -= f * A[i][j];
+                            b[k] -= f * b[i];
+                            logStep(`Haciendo cero arriba/abajo del pivote`, A, b, formE, i, i, k);
+                        }
+                    }
+                }
+                printFinal(`RESULTADO GAUSS-JORDAN: x = ${b[0].toFixed(2)}, y = ${b[1].toFixed(2)}, z = ${b[2].toFixed(2)}`);
+            },
+
+            lu: (A) => {
+                let L = [[1, 0, 0], [0, 1, 0], [0, 0, 1]], U = clonar(A);
+                for (let i = 0; i < 3; i++) {
+                    for (let k = i + 1; k < 3; k++) {
+                        let f = U[k][i] / U[i][i];
+                        L[k][i] = f;
+                        for (let j = i; j < 3; j++) U[k][j] -= f * U[i][j];
+                        logStep(`Generando U y guardando factor en L`, U, null, `U[${k + 1}] = U[${k + 1}] - (${f.toFixed(2)}) * U[${i + 1}]`, i, i, k);
+                    }
+                }
+                logStep("Matriz L final", L);
+                printFinal("DESCOMPOSICIÓN LU: A = L × U (Completado)");
+            },
+
+            suma: (A, B) => {
+                let R = A.map((row, i) => row.map((val, j) => val + B[i][j]));
+                let expl = "<b>Proceso paso a paso:</b><br>";
+                for (let i = 0; i < 3; i++) {
+                    expl += `Fila ${i + 1}: [${A[i][0]}+${B[i][0]}], [${A[i][1]}+${B[i][1]}], [${A[i][2]}+${B[i][2]}]<br>`;
+                }
+                logStep("Operación Suma: A + B", R, null, expl);
+                printFinal("MATRIZ RESULTANTE DE LA SUMA");
+            },
+
+            resta: (A, B) => {
+                let R = A.map((row, i) => row.map((val, j) => val - B[i][j]));
+                let expl = "<b>Proceso paso a paso:</b><br>";
+                for (let i = 0; i < 3; i++) {
+                    expl += `Fila ${i + 1}: [${A[i][0]}-${B[i][0]}], [${A[i][1]}-${B[i][1]}], [${A[i][2]}-${B[i][2]}]<br>`;
+                }
+                logStep("Operación Resta: A - B", R, null, expl);
+                printFinal("MATRIZ RESULTANTE DE LA RESTA");
+            },
+
+            mult: (A, B) => {
+                let R = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+                let expl = "<b>Cálculo (Fila A × Columna B):</b><br>";
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j < 3; j++) {
+                        let suma = 0;
+                        let det = "";
+                        for (let k = 0; k < 3; k++) {
+                            let prod = A[i][k] * B[k][j];
+                            suma += prod;
+                            det += `(${A[i][k]}*${B[k][j]})` + (k < 2 ? " + " : "");
+                        }
+                        R[i][j] = suma;
+                        expl += `Pos [${i + 1},${j + 1}]: ${det} = ${suma.toFixed(2)}<br>`;
+                    }
+                    expl += "<hr style='border:0; border-top:1px solid #475569'>";
+                }
+                logStep("Operación Multiplicación: A × B", R, null, expl);
+                printFinal("MATRIZ RESULTANTE DEL PRODUCTO");
+            },
+
+            cholesky: (A) => {
+                let L = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+                for (let i = 0; i < 3; i++) {
+                    for (let j = 0; j <= i; j++) {
+                        let s = 0; for (let k = 0; k < j; k++) s += L[i][k] * L[j][k];
+                        if (i === j) L[i][j] = Math.sqrt(A[i][i] - s);
+                        else L[i][j] = (A[i][j] - s) / L[j][j];
+                        logStep(`Calculando L[${i + 1}][${j + 1}]`, L, null, "Fórmula de Cholesky aplicada", -1, -1, i);
+                    }
+                }
+                printFinal("CHOLESKY: Matriz L obtenida con éxito.");
+            },
+
+            inversa: (A) => {
+                let I = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+                for (let i = 0; i < 3; i++) {
+                    let p = A[i][i];
+                    for (let j = 0; j < 3; j++) { A[i][j] /= p; I[i][j] /= p; }
+                    logStep(`Normalizando fila ${i + 1}`, A, null, `R${i + 1} = R${i + 1} / ${p.toFixed(2)}`, i, i, i);
+                    for (let k = 0; k < 3; k++) {
+                        if (k !== i) {
+                            let f = A[k][i];
+                            for (let j = 0; j < 3; j++) { A[k][j] -= f * A[i][j]; I[k][j] -= f * I[i][j]; }
+                            logStep(`Reduciendo fila ${k + 1}`, A, null, `R${k + 1} = R${k + 1} - (${f.toFixed(2)}) * R${i + 1}`, i, i, k);
+                        }
+                    }
+                }
+                logStep("MATRIZ INVERSA (A⁻¹)", I);
+                printFinal("INVERSA: Cálculo completado mediante Gauss-Jordan.");
+            }
+        };
+
+        function ejecutar(t) {
+            document.getElementById('log').innerHTML = "";
+            let A = leerM('inputsA'), b = leerV(), MB = leerM('inputsMatB');
+
+            if (t === 'gauss') metodos.gauss(A, b);
+            if (t === 'jordan') metodos.jordan(A, b);
+            if (t === 'lu') metodos.lu(A);
+            if (t === 'inversa') metodos.inversa(A);
+            if (t === 'suma') metodos.suma(A, MB);
+            if (t === 'resta') metodos.resta(A, MB);
+            if (t === 'mult') metodos.mult(A, MB);
+            if (t === 'cholesky') metodos.cholesky(A);
+            if (t === 'det') {
+                let d1 = A[0][0] * (A[1][1] * A[2][2] - A[1][2] * A[2][1]);
+                let d2 = A[0][1] * (A[1][0] * A[2][2] - A[1][2] * A[2][0]);
+                let d3 = A[0][2] * (A[1][0] * A[2][1] - A[1][1] * A[2][0]);
+                let total = d1 - d2 + d3;
+                let expl = `<b>Desarrollo por Cofactores:</b><br>
+                1. (+${A[0][0]}) * [(${A[1][1]}*${A[2][2]}) - (${A[1][2]}*${A[2][1]})] = ${d1.toFixed(2)}<br>
+                2. (-${A[0][1]}) * [(${A[1][0]}*${A[2][2]}) - (${A[1][2]}*${A[2][0]})] = ${(-d2).toFixed(2)}<br>
+                3. (+${A[0][2]}) * [(${A[1][0]}*${A[2][1]}) - (${A[1][1]}*${A[2][0]})] = ${d3.toFixed(2)}<br>
+                <b>Total:</b> ${d1.toFixed(2)} - (${d2.toFixed(2)}) + ${d3.toFixed(2)} = ${total.toFixed(4)}`;
+                logStep("Cálculo del Determinante", A, null, expl);
+                printFinal(`EL DETERMINANTE ES: |A| = ${total.toFixed(4)}`);
+            }
+            if (t === 'cramer') {
+                const getDet = (m) => m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+                let dA = getDet(A);
+                if (dA === 0) return printFinal("Determinante es 0. El sistema no tiene solución única.");
+                let res = [];
+                for (let i = 0; i < 3; i++) {
+                    let temp = clonar(A);
+                    for (let j = 0; j < 3; j++) temp[j][i] = b[j];
+                    res.push(getDet(temp) / dA);
+                    logStep(`Sustituyendo b en columna ${i + 1}`, temp, null, `Det(Ai) / Det(A)`);
+                }
+                printFinal(`RESULTADO CRAMER: x=${res[0].toFixed(2)}, y=${res[1].toFixed(2)}, z=${res[2].toFixed(2)}`);
+            }
+        }
+    </script>
+</body>
+
+</html>

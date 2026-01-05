@@ -67,8 +67,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "c:/Users/Kira/Uni/projetcs/trabalo/DBP",
-      "program": "c:/Users/Kira/Uni/projetcs/trabalo/DBP/build/Debug/outDebug",
+      "cwd": "c:/Users/Kira/Uni/projetcs/trabalo/output",
+      "program": "c:/Users/Kira/Uni/projetcs/trabalo/output/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
