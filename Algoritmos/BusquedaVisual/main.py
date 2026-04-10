@@ -6,7 +6,7 @@ from BusquedaVisual import *
 pygame.init()
 ANCHO, ALTO = 1100, 750 
 VENTANA = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Simulador de Ingenieria: Analizador de Algoritmos (n=15)")
+pygame.display.set_caption("Simulador de Algoritmos de busqueda Visual")
 
 # Colores
 FONDO = (18, 18, 24)
@@ -23,7 +23,6 @@ FUENTE_UI = pygame.font.SysFont("Segoe UI", 20)
 
 def dibujar_interfaz(arr, objetivo, resaltados={}, info="ESPERANDO COMANDO", resultado=None):
     VENTANA.fill(FONDO)
-    
     # 1. Cabecera Informativa
     pygame.draw.rect(VENTANA, (30, 30, 40), (40, 20, 1020, 110), border_radius=15)
     t_obj = FUENTE_TITULO.render(f"OBJETIVO: {objetivo}", True, NARANJA)
@@ -39,23 +38,19 @@ def dibujar_interfaz(arr, objetivo, resaltados={}, info="ESPERANDO COMANDO", res
         ancho_disponible = 1000
         ancho_b = ancho_disponible // n
         max_v = max(arr) if max(arr) > 0 else 1
-        
         for i, val in enumerate(arr):
             color = AZUL_SOFT
             if i in resaltados: color = resaltados[i]
-            
             altura = (val * 350) // max_v
             x, y = 50 + (i * ancho_b), 550 - altura
-            
             # Dibujar Barra
             pygame.draw.rect(VENTANA, color, (x, y, ancho_b - 10, altura), border_radius=4)
-            
             # Valores (Encima) e Índices (Debajo)
-            v_t = FUENTE_DATOS.render(str(val), True, TEXTO)
-            VENTANA.blit(v_t, (x + (ancho_b//4) - 5, y - 30))
-            
-            i_t = FUENTE_DATOS.render(f"[{i}]", True, (110, 110, 120))
-            VENTANA.blit(i_t, (x + (ancho_b//4) - 5, 560))
+            if n <= 15:
+                v_t = FUENTE_DATOS.render(str(val), True, TEXTO)
+                VENTANA.blit(v_t, (x + (ancho_b//4) - 5, y - 30))
+                i_t = FUENTE_DATOS.render(f"[{i}]", True, (110, 110, 120))
+                VENTANA.blit(i_t, (x + (ancho_b//4) - 5, 560))
 
     # 3. Log de Estado
     pygame.draw.rect(VENTANA, (10, 10, 15), (50, 600, 1000, 45), border_radius=8)
@@ -63,7 +58,7 @@ def dibujar_interfaz(arr, objetivo, resaltados={}, info="ESPERANDO COMANDO", res
     VENTANA.blit(t_status, (70, 610))
 
     # 4. Controles
-    controles = "[1]Lineal  [2]Binaria  [3]Exponencial  [4]Interpolación  [E]Ingresar Datos  [R]Reset"
+    controles = "[1]Lineal  [2]Binaria  [3]Exponencial  [4]Interpolación [G]Generar Datos  [E]Editar (No disponible web)"
     t_ctrl = FUENTE_UI.render(controles, True, (200, 200, 200))
     VENTANA.blit(t_ctrl, (50, 670))
 
@@ -93,15 +88,18 @@ def dibujar_interfaz(arr, objetivo, resaltados={}, info="ESPERANDO COMANDO", res
 def esta_ordenado(arr):
     return all(arr[i] <= arr[i+1] for i in range(len(arr)-1))
 
+def esperar_tecla():
+    esperando = True
+    while esperando:
+        for e in pygame.event.get():
+            if e.type in [pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN]: esperando = False
+            if e.type == pygame.QUIT: pygame.quit(); sys.exit()
+
 def ejecutar(alg, arr, obj):
     nombre_alg = alg.__name__ # validacion algoitmo desordenado
     if "lineal" not in nombre_alg and not esta_ordenado(arr):
         dibujar_interfaz(arr, obj, {}, "ERROR: El arreglo debe estar ORDENADO para este algoritmo", (False, "Falla de Requisito"))
-        esperando = True
-        while esperando:
-            for e in pygame.event.get():
-                if e.type == pygame.KEYDOWN or e.type == pygame.MOUSEBUTTONDOWN: esperando = False
-                if e.type == pygame.QUIT: pygame.quit(); sys.exit()
+        esperar_tecla()
         return
     def callback(a, col, msg):
         dibujar_interfaz(a, obj, col, msg)
@@ -111,12 +109,7 @@ def ejecutar(alg, arr, obj):
 
     res = alg(arr, obj, callback)
     dibujar_interfaz(arr, obj, {res: VERDE} if res != -1 else {}, "Búsqueda finalizada", (res != -1, res))
-    
-    esperando = True
-    while esperando:
-        for e in pygame.event.get():
-            if e.type == pygame.KEYDOWN or e.type == pygame.MOUSEBUTTONDOWN: esperando = False
-            if e.type == pygame.QUIT: pygame.quit(); sys.exit()
+    esperar_tecla()
 
 def main():
     # Inicialización con 15 elementos
@@ -133,16 +126,18 @@ def main():
                 elif e.key == pygame.K_2: ejecutar(busqueda_binaria, datos, objetivo)
                 elif e.key == pygame.K_3: ejecutar(busqueda_exponencial, datos, objetivo)
                 elif e.key == pygame.K_4: ejecutar(busqueda_interpolacion, datos, objetivo)
-                elif e.key == pygame.K_r:
+                elif e.key == pygame.K_g:
                     datos = sorted(random.sample(range(10, 500), 15))
                     objetivo = random.choice(datos)
                 elif e.key == pygame.K_e:
-                    print("\n--- INGRESO DE DATOS ---")
-                    try:
-                        entrada = input("Ingresa números separados por comas: ")
-                        datos = [int(x.strip()) for x in entrada.split(",")] # sorted(...) para asegurar ordenamiento si no hay validacion
-                        objetivo = int(input("Número a buscar: "))
-                    except: print("Error en el formato.")
+                    dibujar_interfaz(datos, objetivo, {}, "INFO: Edición por consola no disponible en Web (Próximamente GUI)")
+                    pygame.time.delay(2000)
+                    #print("\n--- INGRESO DE DATOS ---")
+                    #try:
+                        #entrada = input("Ingresa números separados por comas: ")
+                        #datos = [int(x.strip()) for x in entrada.split(",")] # sorted(...) para asegurar ordenamiento si no hay validacion
+                        #objetivo = int(input("Número a buscar: "))
+                    #except: print("Error en el formato.")
 
     pygame.quit()
 
