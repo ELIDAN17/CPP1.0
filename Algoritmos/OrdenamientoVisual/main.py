@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 import pygame
 import random
 import asyncio
 from ordenamientoVIsual import bubble_sort, selection_sort, insertion_sort, shell_sort
 
 # Configuración de pantalla
-WIDTH, HEIGHT = 1100, 800
+WIDTH, HEIGHT = 1000, 920
 BLANCO = (255, 255, 255)
 GRIS_FONDO = (240, 242, 245)
 AZUL_MARINO = (44, 62, 80)
@@ -72,14 +73,14 @@ async def main():
         pygame.draw.rect(screen, BLANCO, (600, 420, 450, 330))
         pygame.draw.rect(screen, AZUL_MARINO, (600, 420, 450, 5), 0)
         
-        screen.blit(fuente_b.render("ESTADÍSTICAS", True, AZUL_MARINO), (620, 440))
+        screen.blit(fuente_b.render("ESTADÍSTICAS (Elija las opciones de cambio desde este panel)", True, AZUL_MARINO), (620, 440))
         screen.blit(fuente.render(f"Comparaciones (IFs): {stats['comp']}", True, (200, 0, 0)), (620, 480))
         screen.blit(fuente.render(f"Intercambios (SWAPs): {stats['swap']}", True, (0, 0, 200)), (620, 510))
         
         screen.blit(fuente_b.render(f"MODO: {columna_actual.upper()} | {('DESC' if sentido_desc else 'ASC')}", True, (39, 174, 96)), (620, 560))
         
         # Guía de teclas
-        inst = ["Prod, Entrega, Iprio: Columna", "Asc, Desc: Sentido", "1 Bubble, 2 Selection, 3 Insertion, 4 Shell: Método", "R: Generar 15 Nuevos"]
+        inst = ["[P]rod, [E]ntrega, [I]prio: Columna", "[A]sc, [D]esc: Sentido", "[1] Bubble, [2] Selection, [3] Insertion, [4] Shell: Método", "R: Generar 15 Nuevos"]
         for idx, t in enumerate(inst):
             screen.blit(fuente.render(t, True, (100, 100, 100)), (620, 600 + idx*25))
 
