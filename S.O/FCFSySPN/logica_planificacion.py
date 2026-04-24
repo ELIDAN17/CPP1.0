@@ -1,4 +1,30 @@
 import pandas as pd
+import os
+
+def cargar_procesos(archivo_o_ruta):
+    try:
+        df = pd.read_csv(archivo_o_ruta, sep=None, engine='python')
+        
+        # 1. Normalizar nombres de columnas (quitar espacios y corregir tildes)
+        df.columns = [c.strip().replace('T_llegada', 'T. llegada').replace('Duracion', 'Duración') for c in df.columns]
+
+        # 2. Si falta 'T. llegada', la creamos con 0 (Caso Tarea 1.1)
+        if 'T. llegada' not in df.columns:
+            df['T. llegada'] = 0
+            
+        # 3. Verificación mínima
+        columnas_esenciales = ['Proceso', 'Duración']
+        if not all(col in df.columns for col in columnas_esenciales):
+            return None
+            
+        # Asegurar que los datos sean numéricos
+        df['T. llegada'] = pd.to_numeric(df['T. llegada'], errors='coerce').fillna(0)
+        df['Duración'] = pd.to_numeric(df['Duración'], errors='coerce').fillna(1)
+        
+        return df[['Proceso', 'T. llegada', 'Duración']]
+        
+    except Exception:
+        return None
 
 def calcular_fcfs(df_procesos):
     # Asegurar que los datos estén ordenados por tiempo de llegada
@@ -67,20 +93,35 @@ def imprimir_resultados(df, nombre_algoritmo):
     print(f"Tiempo Medio de Retorno (TMR): {tmr:.2f}")
     print(f"Tiempo Medio de Espera (TME): {tme:.2f}")
     print("-" * 30)
+    return tme
 
 # Para probarlo con los datos de la Fase 1:
 if __name__ == "__main__":
-    datos = {
-        'Proceso': ['A', 'B', 'C', 'D', 'E'],
-        'T. llegada': [0, 1, 3, 9, 12],
-        'Duración': [3, 5, 2, 5, 5]
-    }
-    df_input = pd.DataFrame(datos)
+    archivo = "procesos.csv"  # Asegúrate de que este archivo exista con los datos correctos
+    print(f"Procesando archivo: {archivo} : archivo cargado con éxito")
+    df_datos = cargar_procesos(archivo)
     
-    # Ejecutar y mostrar FCFS
-    resultado_fcfs = calcular_fcfs(df_input)
-    imprimir_resultados(resultado_fcfs, "FCFS")
-    
-    # Ejecutar y mostrar SPN
-    resultado_spn = calcular_spn(df_input)
-    imprimir_resultados(resultado_spn, "SPN")
+    if df_datos is not None:
+        # Ejecutar y mostrar FCFS
+        resultado_fcfs = calcular_fcfs(df_datos)
+        tme_fcfs =imprimir_resultados(resultado_fcfs, "FCFS")
+
+        # Ejecutar y mostrar SPN
+        resultado_spn = calcular_spn(df_datos)
+        tme_spn = imprimir_resultados(resultado_spn, "SPN")
+        
+        # --- SECCIÓN DE COMPARACIÓN (Tu idea interesante) ---
+        print("\n" + "*"*50)
+        print("RESUMEN COMPARATIVO DE RENDIMIENTO")
+        print(f"Espera Promedio FCFS: {tme_fcfs:.2f}")
+        print(f"Espera Promedio SPN:  {tme_spn:.2f}")
+        
+        if tme_spn < tme_fcfs:
+            print(f"RESULTADO: SPN es más eficiente por {(tme_fcfs - tme_spn):.2f} unidades.")
+        elif tme_spn == tme_fcfs:
+            print("RESULTADO: Ambos algoritmos rinden igual para esta carga.")
+        else:
+            print("RESULTADO: FCFS resultó más eficiente.")
+        print("*"*50)
+    else:
+        print("ERROR CRÍTICO: No se pudo procesar la fuente de datos.")
