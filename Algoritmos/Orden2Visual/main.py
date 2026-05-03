@@ -10,10 +10,29 @@ from simuladorOrden2 import (
     quick_sort, merge_sort, shell_sort, timsort_manual, cargar_datos_csv
 )
 
-st.set_page_config(page_title="Simulador de Ordenamiento UNAP", layout="wide")
+st.set_page_config(page_title="Simulador de Ordenamiento no comparativo", layout="wide")
 
-st.title("⚖️ Comparador de Algoritmos de Ordenamiento")
+st.title("⚖️ Simulador de Algoritmos de Ordenamiento no comparativo")
 st.markdown("---")
+
+# --- MANUAL DE USUARIO RESUMIDO  ---
+with st.expander("📖 Guía Rápida de Uso"):
+    st.markdown("""
+    ### 🚀 ¿Cómo usar el Simulador?
+    
+    1. **Configuración de Datos:** - En el panel izquierdo, elige si deseas usar **Datos Aleatorios** (ajusta el N° de elementos y debajo esta el valor máximo) o **Cargar un CSV**.
+       
+    2. **Simulación Visual:**
+       - Selecciona un algoritmo y presiona **'Simular'**.
+       - **Color Naranja:** El sistema está comparando dos valores.
+       - **Color Rojo:** El sistema está intercambiando los valores de lugar.
+       
+    3. **Comparativa de Rendimiento:**
+       - Presiona **'Comparar Todos los Algoritmos'** para ver cuál es más rápido con la cantidad de datos actual.
+       - Revisa el **Resultado de Eficiencia** al final para ver las recomendaciones técnicas.
+       
+    ⚠️ *Nota: Para la simulación visual se usa una muestra pequeña (primeros 25 datos) para facilitar la observación.*
+    """)
 
 # --- SIDEBAR: CONFIGURACIÓN ---
 st.sidebar.header("📂 Configuración de Datos")
@@ -50,7 +69,7 @@ else:
         "Quick Sort": quick_sort,
         "Merge Sort": merge_sort,
         "Shell Sort": shell_sort,
-        "Timsort (Manual)": timsort_manual
+        "Timsort": timsort_manual
     }
 
     col_visual, col_stats = st.columns([1.5, 1])
