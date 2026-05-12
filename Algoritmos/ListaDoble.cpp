@@ -5,7 +5,7 @@
 #include <filesystem> // para verificar existencia de archivos
 #include <cstdlib>    // para system("cls") o "clear"
 using namespace std;
-
+namespace fs = filesystem;
 // ------------------------- CLASE NODO -------------------------
 class Nodo
 {
