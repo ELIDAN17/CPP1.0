@@ -3,220 +3,135 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
-from logica_planificacion import cargar_procesos, calcular_fcfs, calcular_spn, calcular_srt, calcular_rr
+import numpy as np
+import logica_planificacion as lp
 
 # 1. Configuración de la página
-st.set_page_config(page_title="Simulador CPU - Sistemas Operativos", layout="wide", page_icon="🖥️")
+st.set_page_config(page_title="Simulador de SO - UNA Puno", layout="wide", page_icon="🖥️")
 
-# Estilo personalizado para el título
-st.title("🖥️ Simulador de Planificación de CPU no Expulsivo y Expulsivo")
-st.markdown("""
-Esta herramienta permite comparar políticas de planificación **Expulsivas** y **No Expulsivas**. 
-Sube un archivo CSV o TXT para comenzar.
-""")
-# --- MANUAL DE USUARIO RESUMIDO  ---
-with st.expander("📖 Guía Rápida de Uso"):
+# Estilo para el título
+st.title("🖥️ Simulador Profesional de Sistemas Operativos")
+st.markdown("---")
+
+# --- MANUAL DE USUARIO PARA PRINCIPIANTES ---
+with st.expander("📖 GUÍA COMPLETA: ¿Cómo entender este simulador?"):
     st.markdown("""
-    ### 🚀 ¿Cómo usar el Simulador?
+    ### 🧠 Conceptos Básicos
+    Este simulador te permite comparar cómo un Sistema Operativo gestiona sus dos recursos más críticos: el **Procesador (CPU)** y la **Memoria RAM**.
     
-    1. **Configuración de Datos:** 
-       - En el panel izquierdo **Cargar un CSV** el cual debe tener las columnas: Proceso, T. llegada (opcional), Duración.
-       - Proceso, T. llegada, Duración
-        - P0,   0,  6
-        - P1,   1,  3
-        - P2,   3,  2
-        - P3,   5,  4
+    #### 1. Planificación de CPU (¿Quién usa el procesador?)
+    - **FCFS:** El primero en llegar es el primero en ser atendido. Es justo, pero lento si llega un proceso muy largo primero.
+    - **SPN:** El proceso más corto pasa primero. Minimiza el tiempo de espera promedio.
+    - **SRT:** Versión expulsiva del SPN. Si llega uno más corto que el que se está ejecutando, lo saca.
+    - **Round Robin (RR):** Todos reciben un "pedacito" de tiempo (Quantum). Si no terminan, vuelven al final de la cola.
     
-    2. **Seleccione el modo de simulacion:**
-       - Selecciona un algoritmo entre FCFS, SPN, SRT y RR.
-       - Si eliges Round Robin, ingresa el valor del Quantum (q).
-       
-    3. **Modo de Visualización Gantt:**
-       - **Estático** para ver los resultados en una tabla final.
-       - **Simulación Animada** El sistema simulará la ejecución con una barra de progreso dinamico.
-       - En caso de elegir **animación**, puedes ajustar la velocidad y dar iniciar simulacion que aparece mas abajos.
-       
-    ⚠️ *Nota: Para su funcionamiento correcto y no alucine el sistema. El archivo CSV solo puede contener un ejemplo de n procesos*
+    #### 2. Gestión de Memoria (¿Dónde guardamos los datos?)
+    - **Primer Ajuste:** Coloca el proceso en el primer hueco donde quepa. Es el más rápido.
+    - **Mejor Ajuste:** Busca el hueco que más se parezca al tamaño del proceso. Minimiza el desperdicio inmediato.
+    - **Peor Ajuste:** Coloca el proceso en el hueco más grande disponible. Deja huecos grandes para otros procesos.
+    - **Buddy System:** Divide la memoria en potencias de 2 ($2, 4, 8, 16...$). Muy eficiente para sistemas rápidos.
     """)
-
-# 2. Barra Lateral (Configuración)
-st.sidebar.header("⚙️ Parámetros de Simulación")
-
-archivo_subido = st.sidebar.file_uploader(
-    "Cargar archivo de procesos", 
-    type=["csv", "txt"]
-)
-
-st.sidebar.markdown("---")
-
-# Selección de Algoritmo
-metodo = st.sidebar.selectbox(
-    "Seleccione el Algoritmo:",
-    [
-        "FCFS (First-Come First-Served)",
-        "SPN (Shortest Process Next)",
-        "SRT (Shortest Remaining Time)",
-        "Round Robin (RR)"
-    ]
-)
-
-# Entrada dinámica de Quantum (solo si es Round Robin)
-quantum_usuario = 2
-if "Round Robin" in metodo:
-    quantum_usuario = st.sidebar.number_input(
-        "Ingrese el valor del Quantum (q):", 
-        min_value=1, 
-        max_value=20, 
-        value=2,
-        help="Define el tiempo máximo de ráfaga por turno."
-    )
-
-st.sidebar.markdown("---")
-modo_vista = st.sidebar.radio("Modo de Visualización:", ["Estático (Tabla Final)", "Simulación Animada"])
-
-# 3. Función para dibujar el Diagrama de Gantt
-def dibujar_gantt(gantt_data, titulo, color_hex, max_t_total=None):
-    # Ya no retornamos None si está vacía, creamos la figura de todos modos
-    fig, ax = plt.subplots(figsize=(10, 3))
     
-    if gantt_data:
-        for bloque in gantt_data:
-            ax.broken_barh(
-                [(bloque['Inicio'], bloque['Duración'])], 
-                (10, 9), 
-                facecolors=color_hex, 
-                edgecolor='black'
-            )
-            ax.text(
-                bloque['Inicio'] + bloque['Duración']/2, 
-                14.5, 
-                bloque['Proceso'], 
-                ha='center', va='center', color='white', fontweight='bold'
-            )
 
-    ax.set_xlabel("Línea de Tiempo")
+# 2. Barra Lateral
+st.sidebar.header("🛠️ Panel de Control")
+modulo = st.sidebar.radio("Seleccione el Módulo:", ["Planificación de CPU", "Gestión de Memoria"])
+archivo_subido = st.sidebar.file_uploader("Cargar archivo de procesos (CSV)", type=["csv", "txt"])
+
+# --- CONFIGURACIÓN DINÁMICA ---
+if modulo == "Planificación de CPU":
+    st.sidebar.markdown("---")
+    metodo = st.sidebar.selectbox("Algoritmo de CPU:", 
+        ["FCFS (First-Come First-Served)", "SPN (Shortest Process Next)", "SRT (Shortest Remaining Time)", "Round Robin (RR)"])
+    
+    q_val = 2
+    if "Round Robin" in metodo:
+        q_val = st.sidebar.number_input("Quantum (q):", min_value=1, value=2)
+    modo_vista = st.sidebar.radio("Visualización:", ["Estático", "Simulación Animada"])
+
+else:
+    st.sidebar.markdown("---")
+    st.sidebar.header("💾 Configuración de RAM")
+    mem_total = st.sidebar.number_input("Capacidad RAM (K):", min_value=128, value=1024, step=128)
+    tam_so = st.sidebar.number_input("Reserva S.O. (K):", min_value=0, value=150)
+    metodo_mem = st.sidebar.selectbox("Algoritmo de Asignación:", 
+        ["Primer Ajuste", "Mejor Ajuste", "Peor Ajuste", "Buddy System"])
+
+# 3. Funciones Gráficas
+def dibujar_gantt(gantt_data, titulo, max_t):
+    fig, ax = plt.subplots(figsize=(10, 3))
+    colores = plt.cm.get_cmap('tab10', len(gantt_data))
+    for i, b in enumerate(gantt_data):
+        ax.broken_barh([(b['Inicio'], b['Duración'])], (10, 9), facecolors=colores(i%10), edgecolor='black')
+        ax.text(b['Inicio'] + b['Duración']/2, 14.5, b['Proceso'], ha='center', va='center', color='white', fontweight='bold')
+    ax.set_xlabel("Tiempo")
     ax.set_yticks([])
     ax.set_title(titulo)
-    ax.grid(True, axis='x', linestyle='--', alpha=0.6)
-    
-    # Usamos el tiempo máximo total para que el gráfico no se mueva
-    if max_t_total:
-        ax.set_xlim(0, max_t_total + 1)
-    
-    plt.tight_layout()
+    ax.set_xlim(0, max_t + 1)
+    ax.grid(True, axis='x', linestyle='--', alpha=0.5)
     return fig
 
-# 4. Lógica Principal de Ejecución
-if archivo_subido is not None:
-    df_input = cargar_procesos(archivo_subido)
+def dibujar_mapa_memoria_pro(mem_estado, mem_total, tam_so):
+    fig, ax = plt.subplots(figsize=(5, 8))
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, mem_total)
+    # S.O.
+    ax.add_patch(plt.Rectangle((0.1, 0), 0.8, tam_so, color='#2c3e50', ec='black'))
+    ax.text(0.5, tam_so/2, f"S.O.\n{tam_so}K", ha='center', color='white', fontweight='bold')
+    # Bloques
+    for b in mem_estado:
+        color = '#e74c3c' if b['estado'] == 'Ocupado' else '#2ecc71'
+        ax.add_patch(plt.Rectangle((0.1, b['base']), 0.8, b['tam'], color=color, ec='black', alpha=0.8))
+        label = f"{b['proceso']}\n{b['tam']}K"
+        ax.text(0.5, b['base'] + b['tam']/2, label, ha='center', va='center', fontweight='bold', fontsize=9)
+        ax.text(0.92, b['base'], f"{int(b['base'])}K", fontsize=7, color='gray')
+    ax.set_title("Mapa de Memoria Física", fontweight='bold')
+    ax.set_xticks([])
+    return fig
 
+# 4. Lógica de Ejecución
+if archivo_subido:
+    df_input = lp.cargar_procesos(archivo_subido)
+    
     if df_input is not None:
-        st.sidebar.success("✅ Datos cargados correctamente")
-        
-        # Selección de lógica según el método
-        if "FCFS" in metodo:
-            res, gantt_info = calcular_fcfs(df_input)
-            color = "#1f77b4" # Azul
-        elif "SPN" in metodo:
-            res, gantt_info = calcular_spn(df_input)
-            color = "#9467bd" # Morado
-        elif "SRT" in metodo:
-            res, gantt_info = calcular_srt(df_input)
-            color = "#ff7f0e" # Naranja
-        elif "Round Robin" in metodo:
-            res, gantt_info = calcular_rr(df_input, quantum_usuario)
-            color = "#2ca02c" # Verde
+        if modulo == "Planificación de CPU":
+            # Selección de Algoritmo
+            if "FCFS" in metodo: res_df, gantt = lp.calcular_fcfs(df_input)
+            elif "SPN" in metodo: res_df, gantt = lp.calcular_spn(df_input)
+            elif "SRT" in metodo: res_df, gantt = lp.calcular_srt(df_input)
+            else: res_df, gantt = lp.calcular_rr(df_input, q_val)
 
-       # --- LÓGICA DE VISUALIZACIÓN ---
-        
-        if modo_vista == "Simulación Animada":
-            st.sidebar.markdown("---")
-            st.sidebar.subheader("🕹️ Control de Animación")
-            velocidad = st.sidebar.slider("Velocidad (segundos):", 0.05, 1.0, 0.3)
-            btn_iniciar = st.sidebar.button("▶️ Iniciar Simulación")
+            st.subheader(f"📊 Resultados: {metodo}")
+            
+            if modo_vista == "Simulación Animada":
+                barra = st.progress(0)
+                for i in range(len(gantt)):
+                    time.sleep(0.2)
+                    barra.progress((i+1)/len(gantt))
+            
+            st.pyplot(dibujar_gantt(gantt, metodo, res_df['T. Final'].max()))
+            st.table(res_df)
+            st.info(f"**Tiempo de Espera Promedio:** {res_df['T. Espera'].mean():.2f} unidades.")
 
-            if btn_iniciar:
-                # Contenedores vacíos para actualización dinámica
-                status_text = st.empty()
-                progreso_bar = st.progress(0)
-                gantt_placeholder = st.empty()
-                tabla_placeholder = st.empty()
-                
-                max_tiempo = max([b['Inicio'] + b['Duración'] for b in gantt_info])
-                
-                for t in range(max_tiempo + 1):
-                    # 1. Actualizar texto y barra de progreso
-                    porcentaje = int((t / max_tiempo) * 100)
-                    status_text.markdown(f"### ⏱️ Reloj del Sistema: `{t}` unidades")
-                    progreso_bar.progress(porcentaje)
-                    
-                    # 2. Dibujar Gantt parcial (solo lo ocurrido hasta tiempo t)
-                    gantt_parcial = []
-                    for b in gantt_info:
-                        if b['Inicio'] <= t:
-                            # Calculamos qué parte del bloque es visible
-                            duracion_visible = min(b['Duración'], t - b['Inicio'])
-                            if duracion_visible > 0:
-                                gantt_parcial.append({
-                                    'Proceso': b['Proceso'],
-                                    'Inicio': b['Inicio'],
-                                    'Duración': duracion_visible
-                                })
-                    
-                    with gantt_placeholder:
-                        fig = dibujar_gantt(gantt_parcial, f"Simulando {metodo} (T={t})", color, max_t_total=max_tiempo)
-                        # Forzamos que el eje X siempre sea el total para que no salte
-                        #fig.gca().set_xlim(0, max_tiempo + 1)
-                        st.pyplot(fig)
-                    
-                    # 3. Mostrar tabla de procesos que ya terminaron
-                    with tabla_placeholder:
-                        terminados = res[res['T. Final'] <= t].sort_values(by="T. Final")
-                        if not terminados.empty:
-                            st.write("### ✅ Procesos Finalizados")
-                            st.dataframe(terminados, use_container_width=True)
-                    
-                    time.sleep(velocidad)
-                
-                st.balloons()
-                st.success("✨ Simulación completada con éxito.")
+        else: # MEMORIA
+            st.subheader(f"🧠 Asignación: {metodo_mem}")
+            if "Primer" in metodo_mem: mem_res = lp.calcular_primer_ajuste(mem_total, tam_so, df_input)
+            elif "Mejor" in metodo_mem: mem_res = lp.calcular_mejor_ajuste(mem_total, tam_so, df_input)
+            elif "Peor" in metodo_mem: mem_res = lp.calcular_peor_ajuste(mem_total, tam_so, df_input)
+            else: mem_res = lp.calcular_buddy_system(mem_total, tam_so, df_input)
 
-        else:
-            # --- MODO ESTÁTICO (VISTA FINAL) ---
-            st.subheader(f"📊 Análisis de Rendimiento Final: {metodo}")
-            c1, c2, c3 = st.columns(3)
-            tme = res['T. Espera'].mean()
-            tmr = res['T. Retorno'].mean()
-            c1.metric("TME (Espera Media)", f"{tme:.2f}")
-            c2.metric("TMR (Retorno Medio)", f"{tmr:.2f}")
-            c3.metric("Total Procesos", len(res))
+            # Métricas
+            met = lp.calcular_metricas_memoria(mem_res, mem_total, tam_so)
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Uso Total", met['Uso Total'])
+            c2.metric("Fragmentación", met['Fragmentación Externa'])
+            c3.metric("% Uso", met['Porcentaje de Uso'])
+            c4.metric("Libre", met['Libre Total'])
 
-            st.write("### 🕒 Detalle de Ejecución (Paso a Paso)")
-            df_detallado = pd.DataFrame(gantt_info)
-            df_detallado['Fin'] = df_detallado['Inicio'] + df_detallado['Duración']
-            st.table(df_detallado[['Proceso', 'Inicio', 'Duración', 'Fin']])
-
-            st.write("### 📋 Tabla de Tiempos Final")
-            st.dataframe(res.sort_values(by="T. Final"), use_container_width=True)
-
-            st.write("### 📈 Diagrama de Gantt Final")
-            fig_gantt = dibujar_gantt(gantt_info, f"Gantt Final - {metodo}", color)
-            if fig_gantt:
-                st.pyplot(fig_gantt)
-
-        # --- SECCIÓN DE DESCARGA (Común a ambos modos) ---
-        st.markdown("---")
-        csv_data = res.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Descargar Reporte Completo (CSV)",
-            data=csv_data,
-            file_name=f"simulacion_{metodo.replace(' ', '_')}.csv",
-            mime="text/csv",
-            use_container_width=True
-        )
-
+            col_izq, col_der = st.columns([1, 1.2])
+            with col_izq: st.pyplot(dibujar_mapa_memoria_pro(mem_res, mem_total, tam_so))
+            with col_der: st.write("### 📝 Particiones"); st.table(pd.DataFrame(mem_res))
     else:
-        st.error("❌ Error: No se pudieron procesar los datos. Verifique que el archivo no tenga filas vacías.")
+        st.error("Error al leer el archivo.")
 else:
-    # Mensaje inicial cuando no hay archivo
-    st.info("👈 Por favor, cargue un archivo CSV o TXT desde la barra lateral para iniciar.")
+    st.info("👈 Cargue un archivo CSV para comenzar.")
