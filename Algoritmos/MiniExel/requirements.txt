@@ -1,0 +1,10 @@
+# requirements.txt
+# Interfaz gráfica moderna (opcional, mejora estética)
+customtkinter>=5.2.0
+
+# Para informes y exportación
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# Pruebas
+pytest>=7.0.0
