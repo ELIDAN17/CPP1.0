@@ -1,0 +1,42 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="card">
+  <h2>🏠 Panel de Control</h2>
+  <p>
+    Bienvenido al sistema de gestión y monitoreo de prácticas pre-profesionales.
+    Seleccione una opción del menú para comenzar.
+  </p>
+</div>
+
+<!-- Tarjetas de Resumen -->
+<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px">
+  <div class="card" style="text-align: center; background: #e8f4fc">
+    <h3 style="color: #2980b9">📄 Convenios Activos</h3>
+    <p style="font-size: 30px; font-weight: bold; margin-top: 10px">
+      {{ total_convenios_activos|default:"0" }}
+    </p>
+  </div>
+
+  <div class="card" style="text-align: center; background: #eafaf1">
+    <h3 style="color: #27ae60">⏱️ Horas Registradas</h3>
+    <p style="font-size: 30px; font-weight: bold; margin-top: 10px">
+      {{ total_horas|default:"0" }}
+    </p>
+  </div>
+
+  <div class="card" style="text-align: center; background: #fef9e7">
+    <h3 style="color: #f39c12">🎓 Estudiantes</h3>
+    <p style="font-size: 30px; font-weight: bold; margin-top: 10px">
+      {{ total_estudiantes|default:"0" }}
+    </p>
+  </div>
+
+  <div class="card" style="text-align: center; background: #fdecea">
+    <h3 style="color: #e74c3c">🏢 Empresas</h3>
+    <p style="font-size: 30px; font-weight: bold; margin-top: 10px">
+      {{ total_empresas|default:"0" }}
+    </p>
+  </div>
+</div>
+
+{% endblock %}

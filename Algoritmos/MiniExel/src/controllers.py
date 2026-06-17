@@ -166,3 +166,15 @@ class ControladorHojaCalculo:
     def obtener_total_estudiantes(self):
         """Retorna la cantidad total de estudiantes registrados"""
         return len(self.hoja)
+    
+    def buscar_por_coordenada(self, coordenada):
+        """
+        Busca el valor de una celda por coordenada estilo Excel
+        
+        Args:
+            coordenada: string como "B3" o "F10"
+        
+        Returns:
+            El valor en esa celda
+        """
+        return self.hoja.buscar_por_coordenada(coordenada)

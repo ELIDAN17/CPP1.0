@@ -1,0 +1,62 @@
+{% extends 'base.html' %} {% block content %}
+
+<div class="card">
+  <h2>
+    📄 {% if form.instance.pk %}Editar{% else %}Registrar Nuevo{% endif %}
+    Convenio
+  </h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px">
+      <div>
+        <div class="form-group">
+          <label>{{ form.number.label }}</label>
+          {{ form.number }}
+        </div>
+
+        <div class="form-group">
+          <label>{{ form.student.label }}</label>
+          {{ form.student }}
+        </div>
+
+        <div class="form-group">
+          <label>{{ form.company.label }}</label>
+          {{ form.company }}
+        </div>
+
+        <div class="form-group">
+          <label>{{ form.status.label }}</label>
+          {{ form.status }}
+        </div>
+      </div>
+
+      <div>
+        <div class="form-group">
+          <label>{{ form.start_date.label }}</label>
+          {{ form.start_date }}
+        </div>
+
+        <div class="form-group">
+          <label>{{ form.end_date.label }}</label>
+          {{ form.end_date }}
+        </div>
+
+        <div class="form-group">
+          <label>{{ form.hours_required.label }}</label>
+          {{ form.hours_required }}
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px">
+      <button type="submit" class="btn btn-success">💾 Guardar Datos</button>
+      <a href="{% url 'agreements:list' %}" class="btn btn-danger"
+        >❌ Cancelar</a
+      >
+    </div>
+  </form>
+</div>
+
+{% endblock %}

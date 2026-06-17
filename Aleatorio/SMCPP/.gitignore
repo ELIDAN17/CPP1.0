@@ -1,0 +1,14 @@
+# Ignorar la carpeta interna y configuraciones de OpenCode
+.opencode/
+opencode.json
+
+# Ignorar archivos del sistema de Windows
+Thumbs.db
+Desktop.ini
+
+# Ignorar carpetas de entornos virtuales o dependencias comunes (por si acaso)
+venv/
+.venv/
+node_modules/
+__pycache__/
+*.exe

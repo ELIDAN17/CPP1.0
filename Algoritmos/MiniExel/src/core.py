@@ -239,6 +239,61 @@ class HojaCalculoAcademica:
         self.indice_hash.clear()
         self.historial.clear()
         self.cola_atencion.clear()
+        
+    def columna_a_numero(self, letra_columna):
+        """Convierte letra de columna (A, B, C, AA, AB) a número (1, 2, 3, 27, 28)"""
+        numero = 0
+        for letra in letra_columna.upper():
+            numero = numero * 26 + (ord(letra) - ord('A') + 1)
+        return numero
+    
+    def buscar_por_coordenada(self, coordenada):
+        """
+        Busca el valor de una celda por coordenada estilo Excel (ej: "B3", "F10")
+    
+        Args:
+            coordenada: string como "B3" o "F10"
+    
+        Returns:
+            El valor en esa celda
+        """
+        # Separar letras y números (ej: "B3" → letras="B", numero="3")
+        letras = ''
+        numeros = ''
+        for c in coordenada:
+            if c.isalpha():
+                letras += c
+            else:
+                numeros += c
+    
+        if not letras or not numeros:
+            return None
+    
+        # Convertir letras a número de columna
+        num_columna = self.columna_a_numero(letras)
+        num_fila = int(numeros) - 1  # Excel empieza en 1, nosotros en 0
+    
+        # Verificar que la fila existe
+        if num_fila >= len(self.hoja):
+            return f"[ERROR] Fila {num_fila+1} no existe"
+    
+        estudiante = self.hoja[num_fila]
+    
+        # Mapear columna a campo del estudiante
+        columnas = {
+            1: "codigo",      # Columna A
+            2: "nombre",      # Columna B
+            3: "nota1",       # Columna C
+            4: "nota2",       # Columna D
+            5: "nota3",       # Columna E
+            6: "promedio"     # Columna F
+        }
+    
+        if num_columna in columnas:
+            campo = columnas[num_columna]
+            return getattr(estudiante, campo)
+        else:
+            return f"[ERROR] Columna {letras} fuera de rango (solo A-F)"
     
     def __len__(self):
         return len(self.hoja)

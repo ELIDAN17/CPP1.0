@@ -54,6 +54,7 @@ class MiniExcelAcademico:
         menubar.add_cascade(label="Datos", menu=menu_datos)
         menu_datos.add_command(label="Ordenar por Promedio (QuickSort)", command=self._ordenar_promedio)
         menu_datos.add_command(label="Ordenar por Código (MergeSort)", command=self._ordenar_codigo)
+        menu_datos.add_command(label="Buscar por coordenada", command=self._buscar_por_coordenada)
         
         menu_atencion = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Atención", menu=menu_atencion)
@@ -96,6 +97,80 @@ class MiniExcelAcademico:
         btn_limpiar = tk.Button(toolbar, text="Limpiar", command=self._limpiar_busqueda)
         btn_limpiar.pack(side=tk.LEFT, padx=2)
     
+    def _buscar_por_coordenada(self):
+        """Abre diálogo para buscar por coordenada tipo Excel y resalta la fila"""
+        coordenada = simpledialog.askstring("Buscar por Coordenada", 
+                                    "Ingrese coordenada (ej: B3, F10):")
+        if coordenada:
+            # Buscar el valor
+            valor = self.controlador.buscar_por_coordenada(coordenada)
+        
+            # RESALTAR LA FILA EN LA TABLA
+            try:
+                # Extraer el número de fila de la coordenada (ej: "B3" → 3)
+                fila_numero = int(''.join([c for c in coordenada if c.isdigit()]))
+                indice_fila = fila_numero - 1  # Convertir a índice de lista (0-based)
+            
+                # Buscar el ítem en la tabla por su posición
+                items = self.tabla.get_children()
+                if indice_fila < len(items):
+                    item = items[indice_fila]
+                    self.tabla.selection_set(item)
+                    self.tabla.see(item)
+                    self.status_bar.config(text=f"📍 Coordenada {coordenada.upper()} → {valor}")
+                else:
+                    self.status_bar.config(text=f"⚠️ Fila {fila_numero} no existe")
+            except:
+                self.status_bar.config(text=f"📌 Coordenada {coordenada.upper()} = {valor}")
+        
+            messagebox.showinfo("Resultado", f"Celda {coordenada.upper()} = {valor}")
+    
+    def _crear_tabla(self):
+        frame_tabla = tk.Frame(self.ventana, bg='#f0f0f0')
+        frame_tabla.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+    
+        # Frame con borde para la tabla
+        tabla_border = tk.Frame(frame_tabla, bg='#a0a0a0', bd=1, relief=tk.SOLID)
+        tabla_border.pack(fill=tk.BOTH, expand=True)
+    
+        scroll_y = tk.Scrollbar(tabla_border, orient=tk.VERTICAL)
+        scroll_x = tk.Scrollbar(tabla_border, orient=tk.HORIZONTAL)
+    
+        # Crear Treeview con estilo de tabla
+        self.tabla = ttk.Treeview(tabla_border, columns=('A', 'B', 'C', 'D', 'E', 'F'), 
+                                   show='headings',
+                                   yscrollcommand=scroll_y.set, 
+                                   xscrollcommand=scroll_x.set,
+                                   height=15)
+    
+        # Configurar encabezados con letras de Excel
+        self.tabla.heading('A', text='A (CÓDIGO)')
+        self.tabla.heading('B', text='B (NOMBRE)')
+        self.tabla.heading('C', text='C (NOTA 1)')
+        self.tabla.heading('D', text='D (NOTA 2)')
+        self.tabla.heading('E', text='E (NOTA 3)')
+        self.tabla.heading('F', text='F (PROMEDIO)')
+    
+        self.tabla.column('A', width=100, anchor='center')
+        self.tabla.column('B', width=300)
+        self.tabla.column('C', width=80, anchor='center')
+        self.tabla.column('D', width=80, anchor='center')
+        self.tabla.column('E', width=80, anchor='center')
+        self.tabla.column('F', width=100, anchor='center')
+    
+        # Configurar scrollbars
+        scroll_y.config(command=self.tabla.yview)
+        scroll_x.config(command=self.tabla.xview)
+        scroll_y.pack(side=tk.RIGHT, fill=tk.Y)
+        scroll_x.pack(side=tk.BOTTOM, fill=tk.X)
+        self.tabla.pack(fill=tk.BOTH, expand=True)
+    
+        # Eventos
+        self.tabla.bind('<Double-1>', lambda e: self._editar_celda_excel(e))
+        self.tabla.bind('<Delete>', lambda e: self._eliminar())
+        self.tabla.bind('<F2>', lambda e: self._editar())
+    
+    """"
     def _crear_tabla(self):
         frame_tabla = tk.Frame(self.ventana, bg='#f0f0f0')
         frame_tabla.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
@@ -128,7 +203,7 @@ class MiniExcelAcademico:
         
         self.tabla.bind('<Double-1>', lambda e: self._editar())
         self.tabla.bind('<Delete>', lambda e: self._eliminar())
-        self.tabla.bind('<F2>', lambda e: self._editar())
+        self.tabla.bind('<F2>', lambda e: self._editar())"""
     
     def _crear_paneles(self):
         frame_paneles = tk.Frame(self.ventana, bg='#f0f0f0')
@@ -202,17 +277,23 @@ class MiniExcelAcademico:
         self._actualizar_cola()
     
     def _actualizar_tabla(self):
+        """Actualiza la tabla con los datos más recientes"""
+        # Limpiar tabla
         for item in self.tabla.get_children():
             self.tabla.delete(item)
-        
-        for est in self.controlador.obtener_datos_para_tabla():
+    
+     # Obtener datos frescos
+        datos = self.controlador.obtener_datos_para_tabla()
+    
+        # Insertar datos
+        for est in datos:
             self.tabla.insert('', tk.END, values=(
                 est['codigo'], est['nombre'],
                 f"{est['nota1']:.1f}", f"{est['nota2']:.1f}",
                 f"{est['nota3']:.1f}", f"{est['promedio']:.2f}"
             ))
-        
-        self.status_bar.config(text=f"✅ Total: {len(self.tabla.get_children())} estudiantes")
+    
+        self.status_bar.config(text=f"✅ Total: {len(datos)} estudiantes")
     
     def _actualizar_estadisticas(self):
         stats = self.controlador.obtener_estadisticas_recursivas()
