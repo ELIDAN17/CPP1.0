@@ -7,6 +7,7 @@ import streamlit as st
 import time
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 from algoritmos.busqueda import (
     busqueda_lineal_generator,
     busqueda_binaria_generator,
@@ -315,10 +316,10 @@ if st.session_state.resultados_busqueda:
     
     st.dataframe(df, use_container_width=True, hide_index=True)
     
-    # ========== GRÁFICO DE BARRAS (MÁS GRANDE) ==========
+    # ========== GRÁFICO DE BARRAS ==========
     st.subheader("📈 Comparación visual de tiempos")
     
-    fig, ax = plt.subplots(figsize=(12, 7))  # Más grande
+    fig, ax = plt.subplots(figsize=(12, 7))
     
     nombres = [r["nombre"] for r in resultados]
     tiempos = [r["tiempo_ms"] for r in resultados]
@@ -346,10 +347,10 @@ if st.session_state.resultados_busqueda:
     st.pyplot(fig)
     plt.close(fig)
     
-    # ========== GRÁFICO DE EFICIENCIA (MÁS PEQUEÑO) ==========
+    # ========== GRÁFICO DE EFICIENCIA ==========
     st.subheader("📊 Eficiencia: Comparaciones vs Elementos revisados")
     
-    fig2, ax2 = plt.subplots(figsize=(8, 5))  # Más pequeño
+    fig2, ax2 = plt.subplots(figsize=(8, 5))
     
     nombres2 = [r["nombre"] for r in resultados]
     comparaciones = [r["comparaciones"] for r in resultados]
@@ -372,6 +373,41 @@ if st.session_state.resultados_busqueda:
     st.pyplot(fig2)
     plt.close(fig2)
     
+    # ========== GRÁFICO DE RADAR ==========
+    st.subheader("📊 Perfil de eficiencia (Radar)")
+    
+    # Normalizar valores para el radar
+    max_tiempo = max(r["tiempo_ms"] for r in resultados) if resultados else 1
+    max_comps = max(r["comparaciones"] for r in resultados) if resultados else 1
+    max_elementos = max(r["elementos_revisados"] for r in resultados) if resultados else 1
+    
+    fig3, ax3 = plt.subplots(figsize=(8, 8), subplot_kw={'projection': 'polar'})
+    
+    categorias = ['Tiempo\n(menor mejor)', 'Comparaciones\n(menor mejor)', 'Elementos\n(menor mejor)']
+    num_vars = len(categorias)
+    
+    angulos = [n / float(num_vars) * 2 * 3.14159 for n in range(num_vars)]
+    angulos += angulos[:1]
+    
+    for resultado in resultados:
+        valores_radar = [
+            1 - (resultado["tiempo_ms"] / max_tiempo) if max_tiempo > 0 else 0,
+            1 - (resultado["comparaciones"] / max_comps) if max_comps > 0 else 0,
+            1 - (resultado["elementos_revisados"] / max_elementos) if max_elementos > 0 else 0
+        ]
+        valores_radar += valores_radar[:1]
+        ax3.plot(angulos, valores_radar, 'o-', linewidth=2, label=resultado["nombre"])
+    
+    ax3.set_xticks(angulos[:-1])
+    ax3.set_xticklabels(categorias, fontsize=10)
+    ax3.set_ylim(0, 1)
+    ax3.set_title("Perfil de eficiencia (más cerca del borde = mejor)", fontsize=12, fontweight="bold")
+    ax3.legend(loc='upper right', bbox_to_anchor=(1.3, 1.0))
+    ax3.grid(True)
+    
+    st.pyplot(fig3)
+    plt.close(fig3)
+    
     # ========== RESUMEN ==========
     st.subheader("📝 Análisis de resultados")
     
@@ -391,6 +427,17 @@ if st.session_state.resultados_busqueda:
         st.markdown(f"🔢 **Elementos:** {num_elementos}")
         st.markdown(f"🎯 **Valor:** {valor_buscado}")
         st.markdown(f"✅ **Existente:** {'Sí' if valor_buscado in lista_original else 'No'}")
+    
+    # ========== COMPARACIÓN TEÓRICA ==========
+    with st.expander("📖 Comparación teórica de complejidades"):
+        st.markdown("""
+        | Algoritmo | Mejor caso | Caso promedio | Peor caso | Espacio |
+        |-----------|------------|---------------|-----------|---------|
+        | **Búsqueda Lineal** | O(1) | O(n) | O(n) | O(1) |
+        | **Búsqueda Binaria** | O(1) | O(log n) | O(log n) | O(1) |
+        | **Búsqueda por Interpolación** | O(1) | O(log log n) | O(n) | O(1) |
+        | **Búsqueda Exponencial** | O(1) | O(log n) | O(log n) | O(1) |
+        """)
     
     # ========== BOTÓN PARA LIMPIAR ==========
     if st.button("🗑️ Limpiar resultados", use_container_width=True):

@@ -9,6 +9,7 @@ class NodoB:
         self.hoja = hoja
         self.claves = []
         self.hijos = []
+        self.padre = None
     
     def __repr__(self):
         return f"NodoB({self.claves})"
@@ -67,6 +68,7 @@ class ArbolB:
         t = self.t
         hijo = padre.hijos[i]
         nuevo_hijo = NodoB(hoja=hijo.hoja)
+        nuevo_hijo.padre = padre
         
         # Mover la mitad de las claves al nuevo hijo
         medio = t - 1
@@ -78,6 +80,8 @@ class ArbolB:
         if not hijo.hoja:
             nuevo_hijo.hijos = hijo.hijos[medio + 1:]
             hijo.hijos = hijo.hijos[:medio + 1]
+            for h in nuevo_hijo.hijos:
+                h.padre = nuevo_hijo
         
         padre.hijos.insert(i + 1, nuevo_hijo)
     
@@ -104,3 +108,80 @@ class ArbolB:
         else:
             yield nodo.hijos[i], "accediendo_hijo"
             yield from self._buscar(nodo.hijos[i], valor)
+    
+    def eliminar(self, valor):
+        """Elimina un valor del árbol B (versión simplificada)."""
+        if self.raiz is None or len(self.raiz.claves) == 0:
+            yield None, "vacio"
+            return
+        
+        # Buscar el valor
+        encontrado = False
+        for estado in self.buscar(valor):
+            if len(estado) >= 2 and estado[1] == "encontrado":
+                encontrado = True
+                break
+        
+        if not encontrado:
+            yield None, "no_encontrado"
+            return
+        
+        # Reconstruir el árbol sin el valor
+        valores = []
+        for nodo, op, info in self._recorrer_hojas():
+            if isinstance(nodo, NodoB):
+                for clave in nodo.claves:
+                    if clave != valor:
+                        valores.append(clave)
+        
+        self.raiz = NodoB(hoja=True)
+        yield None, "eliminando"
+        
+        for v in sorted(valores):
+            for _ in self.insertar(v):
+                pass
+        
+        yield None, "eliminado"
+    
+    def _recorrer_hojas(self):
+        """Recorre todas las hojas del árbol."""
+        if self.raiz is None:
+            return
+        
+        cola = [self.raiz]
+        while cola:
+            nodo = cola.pop(0)
+            if nodo.hoja:
+                yield nodo, "hoja"
+            else:
+                for hijo in nodo.hijos:
+                    cola.append(hijo)
+    
+    # ========== MÉTODOS PARA ESTADÍSTICAS ==========
+    
+    def altura(self):
+        """Retorna la altura del árbol B."""
+        return self._altura(self.raiz, 0)
+    
+    def _altura(self, nodo, nivel):
+        if nodo is None or len(nodo.claves) == 0:
+            return nivel - 1
+        if nodo.hoja:
+            return nivel
+        return max(self._altura(hijo, nivel + 1) for hijo in nodo.hijos if hijo is not None)
+    
+    def tamaño(self):
+        """Retorna el número total de claves en el árbol B."""
+        return self._tamaño(self.raiz)
+    
+    def _tamaño(self, nodo):
+        if nodo is None or len(nodo.claves) == 0:
+            return 0
+        total = len(nodo.claves)
+        for hijo in nodo.hijos:
+            total += self._tamaño(hijo)
+        return total
+    
+    def es_balanceado(self):
+        """Los árboles B siempre están balanceados."""
+        return True

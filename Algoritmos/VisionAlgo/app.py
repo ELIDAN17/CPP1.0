@@ -1,14 +1,15 @@
 import streamlit as st
+from utils.guia_usuario import mostrar_guia_resumida
 
 # ========== CONFIGURACIÓN DE PÁGINA ==========
 st.set_page_config(
     page_title="AlgoVision - Simulador de Algoritmos",
     page_icon="🧠",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# ========== BARRA LATERAL ==========
+# ========== BARRA LATERAL PERSONALIZADA ==========
 with st.sidebar:
     st.markdown("# 🧠 AlgoVision")
     st.markdown("*Simulador de Algoritmos*")
@@ -19,45 +20,63 @@ with st.sidebar:
     if st.button("🏠 Inicio", use_container_width=True, key="nav_inicio"):
         st.switch_page("app.py")
     
+    if st.button("📖 Guía de usuario", use_container_width=True, key="nav_guia"):
+        st.switch_page("pages/guia.py")
+    
+    st.markdown("---")
+    
+    st.markdown("### 🔬 Módulos")
+    
     if st.button("📊 Ordenamiento", use_container_width=True, key="nav_ordenamiento"):
         st.switch_page("pages/ordenamiento.py")
     
-    if st.button("🏆 Comparar Ordenamiento", use_container_width=True, key="nav_comp_ordenamiento"):
-        st.switch_page("pages/comparacion_ordenamiento.py")
-        
-    if st.button("🏆 Comparar Búsqueda", use_container_width=True, key="nav_comp_busqueda"):
-        st.switch_page("pages/comparacion_busqueda.py")
-    
     if st.button("🔍 Búsqueda", use_container_width=True, key="nav_busqueda"):
         st.switch_page("pages/busqueda.py")
-        
+    
     if st.button("🌳 Árboles", use_container_width=True, key="nav_arboles"):
         st.switch_page("pages/arboles.py")
     
-    st.markdown("---")
-    st.markdown("### 🚧 Próximamente")
-    st.markdown("- 🔗 Grafos")
+    if st.button("🔗 Grafos", use_container_width=True, key="nav_grafos"):
+        st.switch_page("pages/grafos.py")
     
     st.markdown("---")
-    st.caption("SIS210 - UNA Puno")
+    
+    st.markdown("### 🏆 Comparaciones")
+    
+    if st.button("📊 Ordenamiento", use_container_width=True, key="nav_comp_ordenamiento"):
+        st.switch_page("pages/comparacion_ordenamiento.py")
+    
+    if st.button("🔍 Búsqueda", use_container_width=True, key="nav_comp_busqueda"):
+        st.switch_page("pages/comparacion_busqueda.py")
+    
+    if st.button("🌳 Árboles", use_container_width=True, key="nav_comp_arboles"):
+        st.switch_page("pages/comparacion_arboles.py")
+    
+    if st.button("🔗 Grafos", use_container_width=True, key="nav_comp_grafos"):
+        st.switch_page("pages/comparacion_grafos.py")
+    
+    st.markdown("---")
+    st.caption("J_Ely © 2026 - AlgoVision")
 
 # ========== ESTILOS PERSONALIZADOS ==========
 st.markdown("""
 <style>
     .main-title {
         text-align: center;
-        font-size: 3em;
+        font-size: 3.5em;
         font-weight: bold;
-        background: linear-gradient(135deg, #1f77b4, #2ca02c);
+        background: linear-gradient(135deg, #1f77b4, #2ca02c, #ff7f0e);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0;
+        animation: fadeIn 1s ease-in;
     }
     .subtitle {
         text-align: center;
         color: #666;
         margin-top: 0;
         margin-bottom: 30px;
+        font-size: 1.2em;
     }
     .card {
         background: #f8f9fa;
@@ -65,12 +84,12 @@ st.markdown("""
         border-radius: 15px;
         text-align: center;
         border: 1px solid #e9ecef;
-        transition: transform 0.2s;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         height: 100%;
     }
     .card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
     }
     .card-icon {
         font-size: 3em;
@@ -101,18 +120,53 @@ st.markdown("""
         padding: 20px;
         color: #888;
         font-size: 0.8em;
+        border-top: 1px solid #eee;
+    }
+    .welcome-box {
+        background: linear-gradient(135deg, #e8f5e9, #b2dfdb);
+        padding: 20px;
+        border-radius: 15px;
+        margin: 10px 0;
+        border-left: 5px solid #2ca02c;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ========== TÍTULO ==========
 st.markdown('<p class="main-title">🧠 AlgoVision</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Simulador de Algoritmos y Estructuras de Datos<br>SIS210 - Universidad Nacional del Altiplano</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Simulador interactivo de Algoritmos y Estructuras de Datos<br>📚 SIS210 - Universidad Nacional del Altiplano</p>', unsafe_allow_html=True)
 
 st.markdown("---")
 
-# ========== TARJETAS DE ACCESO ==========
-st.markdown("### 🚀 Explora los módulos")
+# ========== BIENVENIDA ==========
+st.markdown("""
+<div class="welcome-box">
+    <h3 style="margin: 0; color: #1a6b1a;">🎓 ¡Bienvenido a AlgoVision!</h3>
+    <p style="margin: 5px 0 0 0; color: #333;">
+        Aprende algoritmos y estructuras de datos de forma visual e interactiva. 
+        Explora los módulos, ejecuta animaciones y compara el rendimiento de cada algoritmo.
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
+
+# ========== GUÍA DE USUARIO ==========
+mostrar_guia_resumida()
+
+st.markdown("---")
+
+# ========== TARJETAS DE ACCESO - MÓDULOS PRINCIPALES ==========
+st.markdown("### 🔬 Módulos principales")
 
 col1, col2, col3, col4 = st.columns(4)
 
@@ -122,10 +176,9 @@ with col1:
         <div class="card-icon">📊</div>
         <div class="card-title">Ordenamiento</div>
         <div class="card-description">
-            • Bubble, Selection, Insertion<br>
-            • Quick, Merge, Shell<br>
-            • Counting, Radix, Bucket<br>
-            • ¡9 algoritmos en total!
+            • 9 algoritmos<br>
+            • Animaciones paso a paso<br>
+            • Comparación de rendimiento
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -138,10 +191,9 @@ with col2:
         <div class="card-icon">🔍</div>
         <div class="card-title">Búsqueda</div>
         <div class="card-description">
-            • Búsqueda Lineal<br>
-            • Búsqueda Binaria<br>
-            • Búsqueda por Interpolación<br>
-            • Búsqueda Exponencial
+            • 4 algoritmos<br>
+            • Búsqueda Lineal y Binaria<br>
+            • Interpolación y Exponencial
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -154,10 +206,9 @@ with col3:
         <div class="card-icon">🌳</div>
         <div class="card-title">Árboles</div>
         <div class="card-description">
-            • Árbol Binario de Búsqueda<br>
-            • Árbol AVL (balanceado)<br>
-            • Árbol Rojo-Negro<br>
-            • Árboles B y B+
+            • ABB, AVL, Rojo-Negro<br>
+            • Árboles B y B+<br>
+            • Recorridos y balanceo
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -167,77 +218,109 @@ with col3:
 with col4:
     st.markdown("""
     <div class="card">
-        <div class="card-icon">🏆</div>
-        <div class="card-title">Comparaciones</div>
+        <div class="card-icon">🔗</div>
+        <div class="card-title">Grafos</div>
         <div class="card-description">
-            • Comparar Ordenamiento<br>
-            • Comparar Búsqueda<br>
-            • Tablas de tiempos<br>
-            • Gráficos comparativos
+            • BFS y DFS<br>
+            • Dijkstra (camino mínimo)<br>
+            • PRIM (árbol de expansión)
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # ✅ BOTONES CON KEYS ÚNICAS
-    if st.button("🏆 Comparar Ordenamiento", key="btn_comp_ordenamiento", use_container_width=True):
-        st.switch_page("pages/comparacion_ordenamiento.py")
-    
-    if st.button("🏆 Comparar Búsqueda", key="btn_comp_busqueda", use_container_width=True):
-        st.switch_page("pages/comparacion_busqueda.py")
+    if st.button("🔗 Explorar Grafos", key="btn_grafos", use_container_width=True):
+        st.switch_page("pages/grafos.py")
 
 st.markdown("---")
 
-# ========== GRAFOS (fila adicional) ==========
-st.markdown("### 🔗 Grafos")
-col_grafos1, col_grafos2, col_grafos3, col_grafos4 = st.columns(4)
-with col_grafos1:
+# ========== TARJETAS DE COMPARACIONES ==========
+st.markdown("### 🏆 Comparaciones")
+
+col_comp1, col_comp2, col_comp3, col_comp4 = st.columns(4)
+
+with col_comp1:
+    st.markdown("""
+    <div class="card">
+        <div class="card-icon">📊</div>
+        <div class="card-title">Ordenamiento</div>
+        <div class="card-description">
+            • 9 algoritmos<br>
+            • Tiempo, comparaciones<br>
+            • Gráficos y radar
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🏆 Comparar Ordenamiento", key="btn_comp_ordenamiento", use_container_width=True):
+        st.switch_page("pages/comparacion_ordenamiento.py")
+
+with col_comp2:
+    st.markdown("""
+    <div class="card">
+        <div class="card-icon">🔍</div>
+        <div class="card-title">Búsqueda</div>
+        <div class="card-description">
+            • 4 algoritmos<br>
+            • Tiempo, comparaciones<br>
+            • Elementos revisados
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🏆 Comparar Búsqueda", key="btn_comp_busqueda", use_container_width=True):
+        st.switch_page("pages/comparacion_busqueda.py")
+
+with col_comp3:
+    st.markdown("""
+    <div class="card">
+        <div class="card-icon">🌳</div>
+        <div class="card-title">Árboles</div>
+        <div class="card-description">
+            • 5 estructuras<br>
+            • Altura, tamaño<br>
+            • Balance y eficiencia
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    if st.button("🏆 Comparar Árboles", key="btn_comp_arboles", use_container_width=True):
+        st.switch_page("pages/comparacion_arboles.py")
+
+with col_comp4:
     st.markdown("""
     <div class="card">
         <div class="card-icon">🔗</div>
         <div class="card-title">Grafos</div>
         <div class="card-description">
-            • BFS (Amplitud)<br>
-            • DFS (Profundidad)<br>
-            • Dijkstra (Camino mínimo)<br>
-            • PRIM (Árbol de expansión)
+            • 4 algoritmos<br>
+            • Tiempo, pasos<br>
+            • Nodos visitados
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.info("🚧 Próximamente")
+    if st.button("🏆 Comparar Grafos", key="btn_comp_grafos", use_container_width=True):
+        st.switch_page("pages/comparacion_grafos.py")
 
 st.markdown("---")
 
-# ========== ALGORITMO DESTACADO Y ESTADÍSTICAS ==========
-col_izq, col_der = st.columns([2, 1])
+# ========== ESTADÍSTICAS ==========
+st.markdown("### 📊 Estadísticas del simulador")
 
-with col_izq:
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #ffd700, #ffb347); padding: 20px; border-radius: 15px;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">⭐ Algoritmo destacado</h3>
-        <h2 style="margin: 0; color: #333;">Quick Sort</h2>
-        <p style="margin: 5px 0 0 0; color: #444;">El algoritmo más rápido en la práctica.<br>
-        Divide y vencerás con pivote. O(n log n) promedio.</p>
-    </div>
-    """, unsafe_allow_html=True)
+col_stats1, col_stats2, col_stats3, col_stats4 = st.columns(4)
 
-with col_der:
-    st.markdown("""
-    <div class="stats-container">
-        <h3 style="margin: 0 0 15px 0; text-align: center;">📊 Estadísticas</h3>
-        <table style="width: 100%; color: white;">
-            <tr><td>📋 Algoritmos:</td><td style="text-align: right;"><b>13</b></td></tr>
-            <tr><td>📊 Visualizaciones:</td><td style="text-align: right;"><b>200+</b></td></tr>
-            <tr><td>🏆 Competencias:</td><td style="text-align: right;"><b>15</b></td></tr>
-        </table>
-    </div>
-    """, unsafe_allow_html=True)
+with col_stats1:
+    st.metric("📋 Algoritmos", "17", help="Total de algoritmos implementados")
+
+with col_stats2:
+    st.metric("🌳 Estructuras", "5", help="Tipos de estructuras de datos")
+
+with col_stats3:
+    st.metric("🏆 Comparaciones", "4", help="Módulos de comparación")
+
+with col_stats4:
+    st.metric("📊 Animaciones", "200+", help="Visualizaciones generadas")
 
 st.markdown("---")
 
 # ========== FOOTER ==========
 st.markdown("""
 <div class="footer">
-    © 2026 - AlgoVision | Curso SIS210 - Algoritmos y Estructuras de Datos<br>
-    Universidad Nacional del Altiplano | Docente: Mg. Aldo Hernán Zanabria Gálvez
+    J_Ely© 2026 - AlgoVision | Algoritmos y Estructuras de Datos<br>
 </div>
 """, unsafe_allow_html=True)

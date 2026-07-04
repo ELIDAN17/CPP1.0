@@ -130,3 +130,32 @@ class ArbolBMas:
         while not actual.hoja:
             actual = actual.hijos[0]
         return actual
+    
+    # ========== MÉTODOS PARA ESTADÍSTICAS ==========
+    
+    def altura(self):
+        """Retorna la altura del árbol B+."""
+        return self._altura(self.raiz, 0)
+    
+    def _altura(self, nodo, nivel):
+        if nodo is None or len(nodo.claves) == 0:
+            return nivel - 1
+        if nodo.hoja:
+            return nivel
+        return max(self._altura(hijo, nivel + 1) for hijo in nodo.hijos if hijo is not None)
+    
+    def tamaño(self):
+        """Retorna el número total de claves en el árbol B+."""
+        return self._tamaño(self.raiz)
+    
+    def _tamaño(self, nodo):
+        if nodo is None or len(nodo.claves) == 0:
+            return 0
+        total = len(nodo.claves)
+        for hijo in nodo.hijos:
+            total += self._tamaño(hijo)
+        return total
+    
+    def es_balanceado(self):
+        """Los árboles B+ siempre están balanceados."""
+        return True
