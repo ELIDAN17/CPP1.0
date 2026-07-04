@@ -221,8 +221,7 @@ def mostrar_guia():
     ---
     
     ## 📚 Recursos adicionales
-    
-    - **Sílabo del curso**: Consulta las semanas 4-16 para la teoría
+
     - **Bibliografía**: Cormen, Knuth, Sedgewick (ver referencias)
     - **Videos**: Busca visualizaciones en YouTube para complementar
     
@@ -232,7 +231,7 @@ def mostrar_guia():
     """)
 
 def mostrar_guia_resumida():
-    """Muestra una versión resumida de la guía (para la página de inicio)."""
+    """Muestra una versión resumida de la guía."""
     
     with st.expander("📖 Guía rápida de usuario", expanded=False):
         st.markdown("""

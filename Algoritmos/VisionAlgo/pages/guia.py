@@ -11,6 +11,3 @@ st.title("📖 Guía de usuario de AlgoVision")
 st.markdown("---")
 
 mostrar_guia()
-
-st.markdown("---")
-st.caption("📖 Guía de usuario | SIS210 - Algoritmos y Estructuras de Datos")
