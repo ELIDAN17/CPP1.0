@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SMCPP - Sistema de Monitoreo y Control de Prácticas</title>
+    <style>
+      /* --- ESTILOS GENERALES (DISEÑO BONITO Y FUNCIONAL) --- */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #f4f6f9;
+        color: #333;
+      }
+
+      /* --- BARRA SUPERIOR --- */
+      .top-bar {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .top-bar h1 {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .btn-logout {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      /* --- MENÚ LATERAL --- */
+      .container {
+        display: flex;
+        min-height: calc(100vh - 56px);
+      }
+
+      .sidebar {
+        background-color: #34495e;
+        width: 220px;
+        padding: 20px 0;
+        color: white;
+      }
+
+      .sidebar ul {
+        list-style: none;
+      }
+
+      .sidebar ul li {
+        margin-bottom: 5px;
+      }
+
+      .sidebar ul li a {
+        color: #ecf0f1;
+        text-decoration: none;
+        padding: 12px 20px;
+        display: block;
+        transition: background 0.3s;
+        font-size: 15px;
+      }
+
+      .sidebar ul li a:hover {
+        background-color: #2980b9;
+      }
+
+      /* --- CONTENIDO PRINCIPAL --- */
+      .content {
+        flex: 1;
+        padding: 30px;
+      }
+
+      .card {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+      }
+
+      h2 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #3498db;
+        padding-bottom: 10px;
+      }
+
+      /* --- BOTONES Y FORMULARIOS --- */
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        cursor: pointer;
+        margin-right: 8px;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background-color: #3498db;
+        color: white;
+      }
+      .btn-success {
+        background-color: #2ecc71;
+        color: white;
+      }
+      .btn-warning {
+        background-color: #f39c12;
+        color: white;
+      }
+      .btn-danger {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      /* --- TABLAS --- */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      table th,
+      table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+
+      table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+
+      /* --- MENSAJES DE ALERTA --- */
+      .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+      }
+      .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Barra Superior -->
+    <div class="top-bar">
+      <h1>📚 SMCPP - Sistema de Prácticas Pre-Profesionales</h1>
+      <div class="user-info">
+        {% if user.is_authenticated %}
+        <span
+          >👤 {{ user.get_full_name|default:user.username }} |
+          <b>{{ user.get_role_display }}</b></span
+        >
+        <a href="{% url 'logout' %}" class="btn-logout">Cerrar Sesión</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Menú Lateral -->
+      <div class="sidebar">
+        <ul>
+          <li><a href="{% url 'dashboard' %}">🏠 Inicio</a></li>
+
+          {% if user.role == 'ADMIN' %}
+          <li><a href="{% url 'users:list' %}">⚙️ Gestión de Usuarios</a></li>
+          {% endif %} {% if user.role == 'ADMIN' or user.role == 'COORDINATOR'
+          %}
+          <li><a href="{% url 'students:list' %}">🎓 Estudiantes</a></li>
+          <li><a href="{% url 'companies:list' %}">🏢 Empresas</a></li>
+          {% endif %}
+
+          <li><a href="{% url 'agreements:list' %}">📄 Convenios</a></li>
+          <li>
+            <a href="{% url 'hours_records:list' %}">⏱️ Registro de Horas</a>
+          </li>
+          <li><a href="{% url 'evaluations:list' %}">📊 Evaluaciones</a></li>
+        </ul>
+      </div>
+
+      <!-- Contenido Dinámico (AQUÍ SE CARGA CADA PANTALLA) -->
+      <div class="content">
+        <!-- Mensajes de Error/Éxito -->
+        {% if messages %} {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% block content %}
+        <!-- Aquí va el contenido específico de cada página -->
+        {% endblock %}
+      </div>
+    </div>
+  </body>
+</html>

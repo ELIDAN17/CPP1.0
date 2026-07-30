@@ -1,0 +1,874 @@
+
+:root {
+  /* Paleta de Colores */
+  --color-primary: #007bff; /* Azul principal (botones, precios) */
+  --color-primary-dark: #0056b3; /* Azul más oscuro al hover */
+  --color-success: #28a745; /* Verde (botones de añadir al carrito, checkout) */
+  --color-success-dark: #218838; /* Verde más oscuro al hover */
+  --color-danger: #dc3545; /* Rojo (botones de eliminar, mensajes de error) */
+  --color-danger-dark: #c82333; /* Rojo más oscuro al hover */
+  --color-secondary: #6c757d; /* Gris (botones secundarios) */
+  --color-secondary-dark: #5a6268; /* Gris más oscuro al hover */
+  --color-navbar: #2c3e50; /* Azul oscuro para la barra de navegación */
+  --color-accent: #00bcd4; /* Azul claro de acento (hover en navbar) */
+
+  /* Colores de Fondo */
+  --color-bg-light: #f8f8f8; /* Fondo general de la página */
+  --color-bg-card: #fff; /* Fondo blanco para tarjetas y contenedores */
+  --color-bg-cart-summary: #f9f9f9; /* Fondo ligero para el resumen del carrito */
+  --color-bg-hover-light: #e0e0e0; /* Fondo ligero para hover (botones) */
+
+  /* Colores de Borde */
+  --color-border: #e0e0e0; /* Borde general de elementos */
+  --color-border-darker: #ccc; /* Borde más oscuro (inputs) */
+  --color-border-subtle: #eee; /* Borde muy sutil (líneas divisorias) */
+
+  /* Colores de Texto */
+  --color-text-main: #333; /* Texto principal */
+  --color-text-secondary: #666; /* Texto secundario (descripciones) */
+  --color-text-light: #777; /* Texto más claro */
+  --color-text-dark: #2c3e50; /* Texto oscuro (títulos) */
+  --color-text-white: #fff; /* Texto blanco */
+
+  /* Espaciados (Padding/Margin) */
+  --spacing-xs: 5px;
+  --spacing-sm: 8px;
+  --spacing-md: 10px;
+  --spacing-lg: 15px;
+  --spacing-xl: 20px;
+  --spacing-xxl: 25px;
+  --spacing-xxxl: 30px;
+  --spacing-xxxxl: 50px;
+
+  /* Bordes Redondeados */
+  --border-radius-sm: 4px;
+  --border-radius-md: 5px;
+  --border-radius-lg: 8px;
+  --border-radius-xl: 10px;
+
+  /* Sombras */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 6px 12px rgba(0, 0, 0, 0.15); /* Ajustada para mayor impacto en hover */
+}
+
+/* --- Estilos globales y base para App.jsx y body --- */
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif; /* Asegúrate de importar esta fuente si la usas */
+  background-color: var(--color-bg-light);
+  color: var(--color-text-main);
+  line-height: 1.6; /* Mejora la legibilidad */
+}
+
+h1, h2, h3 {
+  color: var(--color-text-dark);
+  margin-bottom: var(--spacing-xl);
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-primary); /* Color por defecto para enlaces */
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+/* --- Clases de Utilidad Reutilizables --- */
+
+/* Contenedor principal para contenido de página */
+.page-container {
+  padding: var(--spacing-xl);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Para centrar texto */
+.text-center {
+  text-align: center;
+}
+
+/* Base para mensajes de feedback */
+.message-base {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+}
+
+.error-message {
+  @extend .message-base; /* No es válido en CSS puro, copiar propiedades */
+  color: var(--color-danger);
+  background-color: #f2dede; /* Rojo muy claro para fondo */
+  border: 1px solid #ebccd1; /* Borde rojo claro */
+}
+/* Reemplazo de @extend .message-base para .error-message */
+.error-message {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+  color: var(--color-danger);
+  background-color: #f2dede;
+  border: 1px solid #ebccd1;
+}
+
+
+.success-message {
+  @extend .message-base; /* No es válido en CSS puro, copiar propiedades */
+  color: var(--color-success);
+  background-color: #dff0d8; /* Verde muy claro para fondo */
+  border: 1px solid #d6e9c6; /* Borde verde claro */
+}
+/* Reemplazo de @extend .message-base para .success-message */
+.success-message {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--border-radius-sm);
+  font-weight: bold;
+  color: var(--color-success);
+  background-color: #dff0d8;
+  border: 1px solid #d6e9c6;
+}
+
+/* Base para todos los botones */
+.btn-base {
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex; /* Para centrar texto y permitir iconos */
+  align-items: center;
+  justify-content: center;
+  text-decoration: none; /* Para usar con Link de React Router */
+  white-space: nowrap; /* Evita que el texto se rompa */
+}
+
+/* Variaciones de color para botones */
+.btn-primary {
+  @extend .btn-base; /* No es válido en CSS puro, copiar propiedades */
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+/* Reemplazo de @extend .btn-base para .btn-primary */
+.btn-primary {
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}
+
+
+.btn-success {
+  @extend .btn-base; /* No es válido en CSS puro, copiar propiedades */
+  background-color: var(--color-success);
+  color: var(--color-text-white);
+}
+.btn-success:hover {
+  background-color: var(--color-success-dark);
+}
+/* Reemplazo de @extend .btn-base para .btn-success */
+.btn-success {
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: var(--color-success);
+  color: var(--color-text-white);
+}
+
+
+.btn-danger {
+  @extend .btn-base; /* No es válido en CSS puro, copiar propiedades */
+  background-color: var(--color-danger);
+  color: var(--color-text-white);
+}
+.btn-danger:hover {
+  background-color: var(--color-danger-dark);
+}
+/* Reemplazo de @extend .btn-base para .btn-danger */
+.btn-danger {
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: var(--color-danger);
+  color: var(--color-text-white);
+}
+
+
+.btn-secondary {
+  @extend .btn-base; /* No es válido en CSS puro, copiar propiedades */
+  background-color: var(--color-secondary);
+  color: var(--color-text-white);
+}
+.btn-secondary:hover {
+  background-color: var(--color-secondary-dark);
+}
+/* Reemplazo de @extend .btn-base para .btn-secondary */
+.btn-secondary {
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: var(--color-secondary);
+  color: var(--color-text-white);
+}
+
+
+/* Base para todas las tarjetas (productos, items del carrito, formularios) */
+.card-base {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm); /* Sombra suave por defecto */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-base:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md); /* Sombra al pasar el ratón */
+}
+
+/* --- Estilos para Navbar --- */
+.navbar {
+  background-color: var(--color-navbar);
+  color: var(--color-text-white);
+  padding: var(--spacing-lg) var(--spacing-xxl);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  position: sticky; /* Fija la barra en la parte superior */
+  top: 0;
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+}
+
+.navbar-brand a {
+  color: var(--color-text-white);
+  text-decoration: none;
+  font-size: 1.6em;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.navbar-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-links li {
+  margin-left: var(--spacing-xxl);
+}
+
+.navbar-links a, .navbar-links span {
+  color: var(--color-text-white);
+  text-decoration: none;
+  font-size: 1.05em;
+  transition: color 0.3s ease;
+  font-weight: 500;
+}
+
+.navbar-links a:hover, .navbar-links span:hover {
+  color: var(--color-accent);
+}
+
+.navbar-search-form {
+  display: flex;
+  align-items: center;
+}
+
+.navbar-search-input {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border-darker);
+  border-radius: var(--border-radius-sm) 0 0 var(--border-radius-sm);
+  color: var(--color-text-main);
+  font-size: 1em; /* Consistencia de fuente */
+}
+
+.navbar-search-button {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+  border: none;
+  border-radius: 0 var(--border-radius-sm) var(--border-radius-sm) 0;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease;
+}
+.navbar-search-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.navbar-button { /* Botones específicos de la navbar como Login/Registro */
+    background: none;
+    border: 1px solid var(--color-text-white);
+    color: var(--color-text-white);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    margin-top: 0; /* Asegura que no tenga el margen por defecto de .auth-button */
+}
+.navbar-button:hover {
+    background-color: var(--color-text-white);
+    color: var(--color-navbar);
+    border-color: var(--color-navbar);
+}
+
+
+/* --- Estilos para el Menú Desplegable de Categorías en Navbar --- */
+.categories-dropdown-container {
+  position: relative;
+  /* Anula el margin-left de .navbar-links li si aplica */
+  margin-left: 0 !important;
+}
+
+.categories-dropdown-toggle {
+  cursor: pointer;
+  display: block;
+  padding: 0.5rem 1rem;
+  color: var(--color-text-white);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.categories-dropdown-toggle:hover {
+  color: var(--color-accent);
+}
+
+.categories-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--color-navbar);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 180px;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+  overflow: hidden;
+}
+
+.categories-dropdown-menu li {
+  margin: 0;
+}
+
+.categories-dropdown-menu a {
+  display: block;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text-white);
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.categories-dropdown-menu a:hover {
+  background-color: var(--color-primary-dark);
+  color: var(--color-text-white);
+}
+
+/* --- Estilos para la cuadrícula de productos (ProductList) --- */
+.productos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-xxl);
+  padding: var(--spacing-xxl);
+  max-width: 1200px; /* Mantener por si se usa sin .page-container */
+  margin: 0 auto; /* Mantener por si se usa sin .page-container */
+}
+
+/* --- Estilos para cada tarjeta de producto (ProductCard) --- */
+.producto-card {
+  /* Propiedades de .card-base */
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md); /* Un poco más de sombra inicial */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Para que la imagen respete el borde redondeado */
+  text-align: center; /* Centrar contenido de la tarjeta */
+}
+.producto-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg); /* Sombra más pronunciada en hover */
+}
+
+.producto-imagen {
+  width: 100%;
+  height: 200px;
+  object-fit: contain; /* Ajusta la imagen dentro del contenedor sin recortar */
+  margin-bottom: var(--spacing-lg); /* Espacio debajo de la imagen */
+  border-radius: var(--border-radius-sm); /* Bordes redondeados para la imagen */
+}
+
+.producto-info {
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1; /* Para que el contenido ocupe el espacio restante */
+}
+
+.producto-nombre {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: var(--color-text-main);
+  margin-bottom: var(--spacing-sm);
+  min-height: 2.6em; /* Para dar espacio a nombres de dos líneas */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box; /* Para -webkit-line-clamp */
+  -webkit-line-clamp: 2; /* Limita a 2 líneas para el nombre si es muy largo */
+  -webkit-box-orient: vertical;
+}
+
+.producto-descripcion {
+  font-size: 0.9em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-md);
+  flex-grow: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3; /* Propiedad estándar para compatibilidad */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.producto-precio {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--color-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+.producto-stock {
+  font-size: 0.85em;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-lg);
+}
+
+.add-to-cart-button {
+  /* Propiedades de .btn-success */
+  background-color: var(--color-success);
+  color: var(--color-text-white);
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+
+  width: 100%; /* Botón de ancho completo */
+  margin-top: auto; /* Empuja el botón hacia abajo en la card */
+}
+
+.add-to-cart-button:hover {
+  background-color: var(--color-success-dark);
+}
+
+/* --- Estilos para Auth (Formularios de Autenticación) --- */
+.auth-container {
+  /* Propiedades de .card-base */
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-xl); /* Un poco más redondeado */
+  box-shadow: var(--shadow-md); /* Sombra media */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+  max-width: 400px;
+  margin: var(--spacing-xxxxl) auto; /* 50px */
+  padding: var(--spacing-xxxl); /* 30px */
+  text-align: left;
+}
+.auth-container:hover { /* Hereda de .card-base:hover */ }
+
+.auth-form .form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.auth-form label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: bold;
+  color: var(--color-text-secondary);
+}
+
+.auth-form input[type="email"],
+.auth-form input[type="password"],
+.auth-form input[type="text"] {
+  width: calc(100% - (var(--spacing-md) * 2)); /* Ajustado por padding */
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border-darker);
+  border-radius: var(--border-radius-md);
+  font-size: 1em;
+}
+
+.auth-button {
+  /* Propiedades de .btn-primary */
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+  border: none;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+
+  padding: 12px 20px; /* Un poco más de padding */
+  font-size: 1.1em;
+  width: 100%;
+  margin-top: var(--spacing-md);
+}
+.auth-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* --- Estilos para la Página del Carrito (CartPage.jsx) --- */
+.cart-page-container {
+    /* Propiedades de .page-container */
+    padding: var(--spacing-xl);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.cart-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xxxl);
+    margin-top: var(--spacing-xl);
+}
+
+.cart-items-list {
+    flex: 2; /* Ocupa 2/3 del espacio */
+    min-width: 300px; /* Mínimo para que no se comprima demasiado */
+}
+
+.cart-item-card {
+    /* Propiedades de .card-base */
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm); /* Sombra más suave para ítems individuales */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-lg);
+}
+.cart-item-card:hover {
+    transform: translateY(-2px); /* Menor efecto hover que en product card */
+    box-shadow: var(--shadow-sm); /* Sin cambio significativo en hover */
+}
+
+.cart-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--border-radius-sm);
+    margin-right: var(--spacing-lg);
+}
+
+.cart-item-details {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.cart-item-details h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.1em;
+    color: var(--color-text-main);
+}
+
+.cart-item-details p {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+
+.cart-item-quantity-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.cart-item-quantity-controls button {
+    background-color: var(--color-bg-hover-light); /* Utilizando variable */
+    border: 1px solid var(--color-border-darker);
+    border-radius: var(--border-radius-sm);
+    padding: 4px var(--spacing-md);
+    cursor: pointer;
+    font-size: 1em;
+    min-width: 30px;
+    transition: background-color 0.2s ease;
+}
+
+.cart-item-quantity-controls button:hover:not(:disabled) {
+    background-color: #d0d0d0; /* Un poco más oscuro */
+}
+
+.cart-item-quantity-controls button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.remove-item-button {
+    /* Propiedades de .btn-danger */
+    background-color: var(--color-danger);
+    color: var(--color-text-white);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    white-space: nowrap;
+
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9em;
+    margin-left: var(--spacing-lg);
+}
+.remove-item-button:hover {
+    background-color: var(--color-danger-dark);
+}
+
+.cart-item-subtotal {
+    font-weight: bold;
+    color: var(--color-primary);
+    margin-top: var(--spacing-md);
+}
+
+/* --- Estilos para el Resumen del Carrito --- */
+.cart-summary-box {
+    flex: 1; /* Ocupa 1/3 del espacio */
+    min-width: 280px; /* Mínimo para que no se comprima demasiado */
+
+    /* Propiedades de .card-base */
+    background-color: var(--color-bg-cart-summary); /* Fondo ligeramente diferente */
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm); /* Sombra suave */
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    padding: var(--spacing-xl);
+}
+.cart-summary-box:hover { /* Hereda de .card-base:hover, ajustado para no mover la caja de resumen */
+  transform: translateY(0); /* Anular el movimiento en hover para la caja de resumen */
+  box-shadow: var(--shadow-md);
+}
+
+.cart-summary-box h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-text-main);
+    font-size: 1.3em;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px dashed var(--color-border-subtle);
+    font-size: 1em;
+}
+
+.summary-row.total-row {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: var(--color-primary);
+    border-top: 1px solid var(--color-border-darker);
+    padding-top: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.proceed-to-checkout-button {
+    /* Propiedades de .btn-success */
+    background-color: var(--color-success);
+    color: var(--color-text-white);
+    border: none;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    white-space: nowrap;
+
+    display: block;
+    width: 100%;
+    padding: 12px var(--spacing-xl);
+    font-size: 1.1em;
+    text-align: center;
+    margin-top: var(--spacing-xl);
+}
+.proceed-to-checkout-button:hover {
+    background-color: var(--color-success-dark);
+}
+
+
+/* Estilos para el contador del carrito en el Navbar */
+.cart-icon-container .cart-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    text-decoration: none;
+    color: var(--color-text-white);
+    font-weight: bold;
+}
+
+/* Estilos para el texto de "carrito vacío" */
+.no-products-found {
+    padding: var(--spacing-xxxxl) 0;
+    font-size: 1.2em;
+    color: var(--color-text-secondary);
+}
+
+/* Título de página específico para HomePage (si es necesario un estilo diferente) */
+.page-title {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: var(--color-text-dark);
+  text-align: center;
+  margin-bottom: var(--spacing-xxxl);
+  margin-top: var(--spacing-xl);
+}
+
+
+/* --- Ajustes para pantallas más pequeñas (Media Queries) --- */
+@media (max-width: 768px) {
+    .page-container {
+        padding: var(--spacing-lg); /* Menos padding en móviles */
+    }
+
+    .navbar {
+        flex-direction: column; /* Apila los elementos en vertical */
+        align-items: flex-start; /* Alinea a la izquierda los items de la navbar */
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    .navbar-brand, .navbar-search-form, .navbar-links {
+        width: 100%; /* Ocupa todo el ancho */
+        margin-bottom: var(--spacing-md); /* Espacio entre secciones */
+    }
+    .navbar-links {
+        flex-wrap: wrap; /* Permite que los enlaces se envuelvan */
+        justify-content: center; /* Centra los enlaces si se envuelven */
+        gap: var(--spacing-sm); /* Espacio entre enlaces */
+    }
+    .navbar-links li {
+        margin-left: 0; /* Elimina el margen por defecto */
+    }
+    .navbar-search-form {
+      flex-direction: column; /* Apila input y botón de búsqueda */
+      margin-bottom: var(--spacing-md);
+    }
+    .navbar-search-input, .navbar-search-button {
+        width: 100%; /* Input y botón de búsqueda ocupan todo el ancho */
+        border-radius: var(--border-radius-sm); /* Bordes uniformes */
+    }
+    .navbar-search-input {
+      margin-bottom: var(--spacing-sm); /* Espacio entre input y botón */
+    }
+
+    .productos-grid {
+        padding: var(--spacing-lg);
+        gap: var(--spacing-xl);
+        grid-template-columns: 1fr; /* Una columna en pantallas muy pequeñas */
+    }
+    .producto-card .producto-imagen {
+        height: 150px; /* Ajusta la altura de la imagen en móvil */
+    }
+    .auth-container {
+        margin: var(--spacing-xxxl) var(--spacing-lg); /* Márgenes laterales para móvil */
+        padding: var(--spacing-xl);
+    }
+
+    .cart-content {
+        flex-direction: column; /* Apila las columnas del carrito */
+        gap: var(--spacing-xl); /* Menos espacio entre secciones */
+    }
+    .cart-items-list, .cart-summary-box {
+        flex: none; /* Deshabilita flex-grow */
+        width: 100%; /* Ocupa todo el ancho disponible */
+    }
+    .cart-item-card {
+      flex-direction: column; /* Apila detalles del item en el carrito */
+      align-items: center;
+      text-align: center;
+    }
+    .cart-item-image {
+      margin-right: 0;
+      margin-bottom: var(--spacing-md);
+    }
+    .cart-item-details {
+      width: 100%; /* Ocupa todo el ancho */
+      text-align: center;
+    }
+    .remove-item-button {
+      margin-left: 0;
+      margin-top: var(--spacing-md);
+    }
+}
