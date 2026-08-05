@@ -79,18 +79,18 @@ def renderizar_modulo_disco(disco, limite_bloques):
     st.markdown("### ⚙️ Configuración del Entorno Físico")
     col_init1, col_init2, col_init3 = st.columns(3)
     with col_init1:
-        if st.button("🧹 Disco Limpio", use_container_width=True):
+        if st.button("🧹 Disco Limpio", width = "stretch"):
             import logica_disco as ld
             st.session_state.disco = ld.DiscoSimulado(limite_bloques)
             st.session_state.historial_auditoria = None
             st.rerun()
     with col_init2:
-        if st.button("☣️ Ensuciar Disco (Uso Medio 35%)", use_container_width=True):
+        if st.button("☣️ Ensuciar Disco (Uso Medio 35%)", width = "stretch"):
             disco.generar_disco_ocupado_aleatorio(porcentaje_ocupacion=0.35)
             st.session_state.historial_auditoria = None
             st.rerun()
     with col_init3:
-        if st.button("🔥 Fragmentación Crítica (Uso Alto 65%)", use_container_width=True):
+        if st.button("🔥 Fragmentación Crítica (Uso Alto 65%)", width = "stretch"):
             disco.generar_disco_ocupado_aleatorio(porcentaje_ocupacion=0.65)
             st.session_state.historial_auditoria = None
             st.rerun()
@@ -112,7 +112,7 @@ def renderizar_modulo_disco(disco, limite_bloques):
     
     velocidad = st.slider("🐢 Velocidad de la animación automática (segundos):", min_value=0.1, max_value=1.5, value=0.5, step=0.1)
     
-    if st.button("🎬 Iniciar Escritura Automatizada", use_container_width=True):
+    if st.button("🎬 Iniciar Escritura Automatizada", width = "stretch"):
         if nuevo_nombre in disco.archivos:
             st.error(f"El archivo '{nuevo_nombre}' ya existe.")
         else:
@@ -217,13 +217,13 @@ def renderizar_modulo_disco(disco, limite_bloques):
                     "Bloque de Control": str(idx_info),
                     "Tamaño": f"{total_blq * 4} KB"
                 })
-            st.dataframe(pd.DataFrame(filas), use_container_width=True)
+            st.dataframe(pd.DataFrame(filas), width = "stretch")
             
     with tab2:
         st.write("### 🗑️ Consola de Desasignación")
         if disco.archivos:
             archivo_a_eliminar = st.selectbox("Archivo a purgar:", list(disco.archivos.keys()))
-            if st.button("❌ Ejecutar 'rm' (Eliminar)", use_container_width=True):
+            if st.button("❌ Ejecutar 'rm' (Eliminar)", width=  "stretch"):
                 if disco.eliminar_archivo(archivo_a_eliminar):
                     st.session_state.historial_auditoria = None
                     st.success("Bloques liberados.")

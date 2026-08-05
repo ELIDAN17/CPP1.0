@@ -213,7 +213,7 @@ if modulo != "Asignación de Disco":
         if df_input is not None:
             st.write(f"### 📋 Vista Previa de los Datos Cargados ({len(df_input)} en total)")
             with st.expander("Ver tabla completa de datos de entrada"):
-                st.dataframe(df_input, use_container_width=True)
+                st.dataframe(df_input, width = "stretch")
             st.markdown("---")
             
             if modulo == "Planificación de CPU":
@@ -260,25 +260,25 @@ if modulo != "Asignación de Disco":
                             ord_f = df_f.sort_values(by='T. Final')['Proceso'].tolist()
                             st.caption(f"Salida: {', '.join(map(str, ord_f[:8]))} ...")
                             st.write("❌ *Top Espera:*")
-                            st.dataframe(df_f.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], use_container_width=True)
+                            st.dataframe(df_f.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], width = "stretch")
                         with ac2:
                             st.write("**Secuencia SPN:**")
                             ord_s = df_s.sort_values(by='T. Final')['Proceso'].tolist()
                             st.caption(f"Salida: {', '.join(map(str, ord_s[:8]))} ...")
                             st.write("❌ *Top Espera:*")
-                            st.dataframe(df_s.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], use_container_width=True)
+                            st.dataframe(df_s.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], width = "stretch")
                         with ac3:
                             st.write("**Secuencia SRT:**")
                             ord_sr = df_sr.sort_values(by='T. Final')['Proceso'].tolist()
                             st.caption(f"Salida: {', '.join(map(str, ord_sr[:8]))} ...")
                             st.write("❌ *Top Espera:*")
-                            st.dataframe(df_sr.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], use_container_width=True)
+                            st.dataframe(df_sr.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], width =  "stretch")
                         with ac4:
                             st.write("**Secuencia Round Robin:**")
                             ord_r = df_r.sort_values(by='T. Final')['Proceso'].tolist()
                             st.caption(f"Salida: {', '.join(map(str, ord_r[:8]))} ...")
                             st.write("❌ *Top Espera:*")
-                            st.dataframe(df_r.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], use_container_width=True)
+                            st.dataframe(df_r.nlargest(3, 'T. Espera')[['Proceso', 'T. Espera']], width = "stretch")
 
                     st.write("#### 🗺️ Confrontación de Diagramas de Gantt (Desplace horizontalmente)")
                     
@@ -307,7 +307,7 @@ if modulo != "Asignación de Disco":
                     col_t3.metric("Última Ráfaga (Cierre)", f"{df_res['T. Final'].max()} u.t.")
                     
                     st.write("#### 📉 Matriz de Tiempos por Proceso")
-                    st.dataframe(df_res, use_container_width=True)
+                    st.dataframe(df_res, width = "stretch")
                     
                     st.markdown("---")
                     st.subheader("🧠 Inspección Dinámica de la CPU")
@@ -432,7 +432,7 @@ if modulo != "Asignación de Disco":
                         st.pyplot(dibujar_mapa_memoria(est_actual, mem_total, tam_so, f"Estructura - Paso {paso}"))
                     with c_der:
                         st.write("#### 📑 Tabla de Mapeo de Direcciones")
-                        st.dataframe(pd.DataFrame(est_actual), use_container_width=True)
+                        st.dataframe(pd.DataFrame(est_actual), width = "stretch")
         else:
             st.error("Error al estructurar las columnas del archivo CSV.")
     else:
@@ -460,7 +460,7 @@ if modulo != "Asignación de Disco":
                 'T. Llegada': [0, 1, 3, 5],
                 'Duración': [3, 5, 2, 4]
             })
-            st.dataframe(ejemplo_cpu, use_container_width=True)
+            st.dataframe(ejemplo_cpu, width = "stretch")
             st.code("Proceso,T. Llegada,Duración\nP1,0,3\nP2,1,5\nP3,3,2\nP4,5,4", language="text")
             
         with col_g2:
@@ -473,7 +473,7 @@ if modulo != "Asignación de Disco":
                 'Duración': [3, 5, 2, 4],
                 'Memoria': [250, 100, 400, 150]
             })
-            st.dataframe(ejemplo_mem, use_container_width=True)
+            st.dataframe(ejemplo_mem, width = "stretch")
             st.code("Proceso,T. Llegada,Duración,Memoria\nP1,0,3,250\nP2,1,5,100\nP3,3,2,400\nP4,5,4,150", language="text")
 
 else:
