@@ -184,10 +184,11 @@ def dibujar_gantt_escalable(gantt_data, max_t, titulo="Diagrama de Gantt", modo_
     fig, ax = plt.subplots(figsize=(ancho_inches, alto_inches), dpi=100)
     nombres_unicos = list(set([b['Proceso'] for b in gantt_data])) if gantt_data else ["Sistema"]
     
+    # --- CORRECCIÓN DE PALETA DE COLORES COMPATIBLE ---
     if len(nombres_unicos) > 20:
-        cmap = plt.cm.get_cmap('gist_rainbow', len(nombres_unicos))
+        cmap = plt.get_cmap('gist_rainbow', len(nombres_unicos))
     else:
-        cmap = plt.cm.get_cmap('tab20', len(nombres_unicos))
+        cmap = plt.get_cmap('tab20', len(nombres_unicos))
         
     colores_dict = {p: cmap(i) for i, p in enumerate(nombres_unicos)}
     
