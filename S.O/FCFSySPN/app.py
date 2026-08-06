@@ -77,7 +77,46 @@ with st.expander("🔍 Introducción y Conceptos Clave"):
     - **Mejor Ajuste:** El sistema busca en toda la memoria el espacio libre que mejor se adapte al tamaño del proceso. Su meta es que no sobre casi nada de espacio libre dentro de ese bloque, aunque buscar toma un poco más de tiempo.
     - **Peor Ajuste:** Coloca el proceso en el espacio libre más grande disponible. La idea detrás de esto es que el pedazo que sobre sea lo suficientemente grande como para que quepa otro proceso entero más adelante.
     - **Buddy System:** Divide la memoria en bloques que siempre son potencias de 2 (2, 4, 8, 16, 32, 64 KB, etc.). Si un proceso necesita espacio, la memoria se va partiendo a la mitad (en "compañeros") hasta encontrar el tamaño exacto que lo reciba sin desperdiciar demasiado.
-    """)
+    
+    #### 3. Políticas de Asignación de Disco (¿Cómo guardamos los archivos?)
+    - **Asignación Contigua:** Cada archivo ocupa un conjunto de bloques contiguos y adyacentes en el disco.
+      * **Ventajas:** Rendimiento óptimo de lectura secuencial.
+      * **Desventajas:** Padece severamente de **fragmentación externa**. Si no existe un segmento contiguo del tamaño requerido, el archivo no se puede guardar, aun si la suma de bloques libres en el disco es suficiente.
+
+    - **Asignación Enlazada (Linked Allocation):** Cada archivo es una lista enlazada de bloques físicos. Cada bloque contiene los datos del archivo y un puntero de hardware que apunta a la dirección del siguiente bloque.
+      * **Ventajas:** Eliminación total de la fragmentación externa.
+      * **Desventajas:** El acceso aleatorio es extremadamente lento (requiere recorrer la lista desde el inicio) y existe riesgo de pérdida de datos si un puntero se corrompe.
+
+    - **Tabla de Asignación de Archivos (FAT - File Allocation Table):** Es una variación de la asignación enlazada donde todos los punteros se extraen de los bloques del disco y se almacenan en una tabla centralizada cargada en memoria RAM.
+      * **Ventajas:** Acelera las búsquedas de bloques al evitar lecturas físicas intermedias.
+      * **Desventajas:** La tabla FAT escala con el tamaño del disco y consume memoria RAM de forma permanente.
+
+    - **Asignación Indexada:** Resuelve los problemas de la asignación enlazada reuniendo todos los punteros de un archivo en un único bloque de control llamado **Bloque Índice**.
+      * **Limitación:** Si el archivo es demasiado grande, la lista de punteros no cabe en un solo bloque de 4 KB.
+
+    - **Asignación Multinivel (I-nodo UNIX / Linux):** Para superar el límite del bloque índice único, el sistema operativo implementa una **estructura jerárquica en árbol** mediante el I-nodo (nodo de índice).
+      Niveles de Direccionamiento
+        1. **Punteros Directos (12 entradas por defecto):**
+            * Apuntan directamente a los bloques de datos del archivo.
+            * Proporcionan velocidad de acceso máxima para archivos pequeños (hasta 48 KB).
+        2. **Puntero Indirecto Simple (Nivel 1):**
+            * Apunta a un bloque índice que contiene únicamente direcciones de bloques de datos.
+            * Capacidad: En bloques de 4 KB con punteros de 4 bytes $\rightarrow$ $4096 / 4 = 1024$ bloques adicionales (4 MB).
+        3. **Puntero Indirecto Doble (Nivel 2):**
+            * Apunta a un bloque índice de primer nivel $\rightarrow$ este apunta a $1024$ bloques índice de segundo nivel $\rightarrow$ estos apuntan a los datos.
+            * Capacidad: $1024 \times 1024 = 1,048,576$ bloques (4 GB).
+        4. **Puntero Indirecto Triple (Nivel 3):**
+            * Estructura de tres niveles de profundidad.
+            * Capacidad: $1024^3 = 1,073,741,824$ bloques ($\approx 4$ Terabytes).
+        
+         Ventajas y Desventajas de la Asignación Multinivel
+
+        | Característica | Ventaja / Desventaja | Explicación Técnica |
+        | :--- | :--- | :--- |
+        | **Flexibilidad de Escala** | **Ventaja** | Archivos pequeños consumen espacio mínimo, mientras que archivos de Terabytes se expanden activando niveles indirectos. |
+        | **Cero Fragmentación Externa** | **Ventaja** | Los bloques de datos pueden estar dispersos en cualquier ubicación del disco. |
+        | **Sobrecosto de Lectura (Overhead)** | **Desventaja** | Para leer un bloque de datos en Nivel 3, el sistema debe realizar hasta 3 lecturas previas de bloques índice. |
+    """ )
 
 # --- Barra Lateral ---
 st.sidebar.header("🛠️ Configuración del Sistema")
